@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		014671D76F5ABC2C5073C4A0 /* ClipboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7186FEA42646CCEFF20E9F0 /* ClipboardViewModel.swift */; };
 		3347971C04E72BA5A7B574B3 /* ClipboardToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BA04142C3A0EBCBFF8DB63 /* ClipboardToolApp.swift */; };
+		39A288659DCDFC0C1F8DFB32 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED3F62E153D43D8E831C19B5 /* LaunchAtLoginManager.swift */; };
 		3DF7B362623A2CF38627FF7A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C03A9F123A06841A2EDA54D2 /* AppDelegate.swift */; };
 		51DD0510C331C3960063E447 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E79DF0933C847F51BB4A7D7B /* HotkeyManager.swift */; };
 		7B4CF6AF34C6CC6ED36BF8B9 /* PasteboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6AB1E1CBC6007EB007A4480 /* PasteboardMonitor.swift */; };
@@ -34,6 +35,7 @@
 		CA4F94B3D6E34011EF938394 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D5EF3E9DFB093942643E0692 /* HotkeySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeySettingsView.swift; sourceTree = "<group>"; };
 		E79DF0933C847F51BB4A7D7B /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		ED3F62E153D43D8E831C19B5 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 		F2576F17C522712B504AB2B2 /* ExportImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -65,6 +67,7 @@
 				F2576F17C522712B504AB2B2 /* ExportImportView.swift */,
 				E79DF0933C847F51BB4A7D7B /* HotkeyManager.swift */,
 				D5EF3E9DFB093942643E0692 /* HotkeySettingsView.swift */,
+				ED3F62E153D43D8E831C19B5 /* LaunchAtLoginManager.swift */,
 				B6AB1E1CBC6007EB007A4480 /* PasteboardMonitor.swift */,
 				1E68938A58F135DC3D556DC5 /* PreviewSettings.swift */,
 				55AD1DD3401253953CCACF62 /* SettingsView.swift */,
@@ -176,6 +179,7 @@
 				D8FBE23B0CA0263947449547 /* ExportImportView.swift in Sources */,
 				51DD0510C331C3960063E447 /* HotkeyManager.swift in Sources */,
 				F4A6C92478BF74120AE29AC8 /* HotkeySettingsView.swift in Sources */,
+				39A288659DCDFC0C1F8DFB32 /* LaunchAtLoginManager.swift in Sources */,
 				7B4CF6AF34C6CC6ED36BF8B9 /* PasteboardMonitor.swift in Sources */,
 				7E5E696C5327C2F62517FB63 /* PreviewSettings.swift in Sources */,
 				AF5DC7E3E3DE33679859855C /* SettingsView.swift in Sources */,
