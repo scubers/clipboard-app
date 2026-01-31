@@ -150,10 +150,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Paste via synthetic Cmd+V. This usually requires Accessibility/Input Monitoring permission.
-        sendPasteKeystroke()
+        // Some apps need a short delay after activation before accepting keystrokes.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+            self?.sendPasteKeystroke()
+            // Retry once more for robustness.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
+                self?.sendPasteKeystroke()
+            }
+        }
 
         // Note: we rely on the system pasteboard already containing `text`.
-        // If the target app is slow to activate, Cmd+V might miss; user can press Cmd+V manually.
         _ = text
     }
 
