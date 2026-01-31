@@ -1,10 +1,13 @@
 import AppKit
+import Combine
 import Foundation
 
 @MainActor
 final class ClipboardViewModel: ObservableObject {
     @Published var items: [Item] = []
     @Published var query: String = ""
+
+    private var queryCancellable: AnyCancellable?
     @Published var selectedID: String?
     @Published var previewText: String = ""
     @Published var error: String?
@@ -45,6 +48,15 @@ final class ClipboardViewModel: ObservableObject {
         if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
             previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
         }
+
+        // Debounced search refresh while typing.
+        queryCancellable = $query
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .removeDuplicates()
+            .debounce(for: .milliseconds(180), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.refresh()
+            }
     }
 
     func bootstrap() {
@@ -98,6 +110,27 @@ final class ClipboardViewModel: ObservableObject {
             let pb = NSPasteboard.general
             pb.clearContents()
             pb.setString(text, forType: .string)
+        } catch {
+            self.error = String(describing: error)
+        }
+    }
+
+    func pasteSelectedToPreviousApp() {
+        guard let id = selectedID else { return }
+        do {
+            // Avoid feedback loop: our own copy action changes pasteboard.
+            monitor.suppress(for: max(0.6, monitor.interval * 2))
+
+            let text = try core.getText(id: id)
+            let pb = NSPasteboard.general
+            pb.clearContents()
+            pb.setString(text, forType: .string)
+
+            NotificationCenter.default.post(
+                name: .clipboardToolPasteSelection,
+                object: nil,
+                userInfo: [ClipboardToolNotificationKeys.text: text]
+            )
         } catch {
             self.error = String(describing: error)
         }

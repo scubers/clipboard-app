@@ -19,9 +19,25 @@
   ./scripts/build_macos_xcode.sh
   ```
 
+## UI / UX notes
+
+### Hotkey → panel → paste back to previous app (best-effort)
+- When triggered via global hotkey, the app remembers the current frontmost app.
+- Press **Enter** in the panel to:
+  1) copy selected item into the system clipboard
+  2) switch back to the previous app
+  3) send a synthetic **Cmd+V** to paste into the previous app's focused input.
+
+**Permissions:** sending synthetic keystrokes typically requires macOS Privacy permissions:
+- System Settings → Privacy & Security → **Accessibility** (and/or **Input Monitoring**)
+
+If permission is missing, the copy-to-clipboard still works, but auto-paste may fail.
+
+### Search debounce
+Search refresh is debounced while typing to avoid excessive queries.
+
 ## Next steps
-1) Create repo skeleton in `~/clawd/clipboard-app/` with `core/` and `macos/`.
-2) Implement `ct_core_open/close` and SQLite schema.
-3) Implement `ct_items_add_text` + `ct_items_list_json`.
-4) SwiftUI app: menu bar + list + preview.
+1) Improve "focus not lost" behavior: explore a non-activating panel or alternative event routing.
+2) Make paste-to-previous-app more robust (retry paste after activation; optionally use AX to insert text directly).
+3) Better keyboard navigation: Up/Down in list + Enter paste + Esc close.
 

@@ -86,8 +86,8 @@ struct ContentView: View {
                             .disabled(vm.selectedID == nil)
                             .keyboardShortcut("c", modifiers: [.command])
 
-                        // Press Enter to copy (tool-like behavior)
-                        Button("", action: { vm.copySelectedToPasteboard() })
+                        // Press Enter to copy + paste into the previous app
+                        Button("", action: { vm.pasteSelectedToPreviousApp() })
                             .keyboardShortcut(.return, modifiers: [])
                             .opacity(0)
                             .frame(width: 0, height: 0)

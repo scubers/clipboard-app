@@ -7,6 +7,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var localKeyMonitor: Any?
     private var appDeactivateObserver: Any?
 
+    private var previousApp: NSRunningApplication?
+    private var previousAppPID: pid_t?
+
     private let hotkey = HotkeyManager.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -29,8 +32,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
 
         hotkey.onTrigger = { [weak self] in
-            self?.toggleClipboardPanel()
+            self?.toggleClipboardPanel(fromHotkey: true)
         }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePasteSelection(_:)),
+            name: .clipboardToolPasteSelection,
+            object: nil
+        )
 
         // Hide panel when app deactivates (clicking outside / switching apps)
         appDeactivateObserver = NotificationCenter.default.addObserver(
@@ -48,19 +58,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // When triggered from the status bar menu, showing a window immediately can be swallowed
         // by the menu run loop. Deferring to the next tick avoids the “need to click twice” issue.
         DispatchQueue.main.async { [weak self] in
-            self?.showClipboardPanel()
+            self?.showClipboardPanel(rememberPreviousApp: false)
         }
     }
 
-    @objc private func toggleClipboardPanel() {
+    @objc private func toggleClipboardPanel(fromHotkey: Bool = false) {
         if let panel, panel.isVisible {
             panel.orderOut(nil)
             return
         }
-        showClipboardPanel()
+        showClipboardPanel(rememberPreviousApp: fromHotkey)
     }
 
-    private func showClipboardPanel() {
+    private func showClipboardPanel(rememberPreviousApp: Bool = false) {
+        if rememberPreviousApp {
+            previousApp = NSWorkspace.shared.frontmostApplication
+            previousAppPID = previousApp?.processIdentifier
+        }
+
         if panel == nil {
             let view = ContentView()
             let hosting = NSHostingController(rootView: view)
@@ -119,6 +134,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openSettings() {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    }
+
+    @objc private func handlePasteSelection(_ note: Notification) {
+        // Hide panel first so we don't interfere with the target app's input.
+        panel?.orderOut(nil)
+
+        guard let text = note.userInfo?[ClipboardToolNotificationKeys.text] as? String else {
+            return
+        }
+
+        // Best-effort: re-activate previous app and paste.
+        if let previousApp {
+            previousApp.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        }
+
+        // Paste via synthetic Cmd+V. This usually requires Accessibility/Input Monitoring permission.
+        sendPasteKeystroke()
+
+        // Note: we rely on the system pasteboard already containing `text`.
+        // If the target app is slow to activate, Cmd+V might miss; user can press Cmd+V manually.
+        _ = text
+    }
+
+    private func sendPasteKeystroke() {
+        let src = CGEventSource(stateID: .combinedSessionState)
+        let vKey: CGKeyCode = 9 // 'v'
+
+        let cmdDown = CGEvent(keyboardEventSource: src, virtualKey: 0x37, keyDown: true) // cmd
+        let vDown = CGEvent(keyboardEventSource: src, virtualKey: vKey, keyDown: true)
+        vDown?.flags = .maskCommand
+        let vUp = CGEvent(keyboardEventSource: src, virtualKey: vKey, keyDown: false)
+        vUp?.flags = .maskCommand
+        let cmdUp = CGEvent(keyboardEventSource: src, virtualKey: 0x37, keyDown: false)
+
+        cmdDown?.post(tap: .cghidEventTap)
+        vDown?.post(tap: .cghidEventTap)
+        vUp?.post(tap: .cghidEventTap)
+        cmdUp?.post(tap: .cghidEventTap)
     }
 
     @objc private func quit() {
