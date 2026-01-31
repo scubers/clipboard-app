@@ -32,3 +32,6 @@ macos/build/
 # (Optional) if you generate release artifacts
 *.dmg
 *.zip
+
+# Local distribution output
+/dist/
