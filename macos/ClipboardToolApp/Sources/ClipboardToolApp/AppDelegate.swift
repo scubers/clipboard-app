@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -144,13 +145,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // Ensure we have permission to post synthetic keystrokes.
+        // If not granted, we can still copy to clipboard, but cannot reliably paste into other apps.
+        guard ensureAccessibilityTrusted() else {
+            showAccessibilityPermissionAlert()
+            return
+        }
+
         // Best-effort: re-activate previous app and paste.
         if let previousApp {
             previousApp.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
         }
 
-        // Paste via synthetic Cmd+V. This usually requires Accessibility/Input Monitoring permission.
-        // Some apps need a short delay after activation before accepting keystrokes.
+        // Paste via synthetic Cmd+V. Some apps need a short delay after activation before accepting keystrokes.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
             self?.sendPasteKeystroke()
             // Retry once more for robustness.
@@ -167,17 +174,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let src = CGEventSource(stateID: .combinedSessionState)
         let vKey: CGKeyCode = 9 // 'v'
 
-        let cmdDown = CGEvent(keyboardEventSource: src, virtualKey: 0x37, keyDown: true) // cmd
+        // Send Cmd+V (down/up). Most apps don't require separate Cmd key down events.
         let vDown = CGEvent(keyboardEventSource: src, virtualKey: vKey, keyDown: true)
         vDown?.flags = .maskCommand
         let vUp = CGEvent(keyboardEventSource: src, virtualKey: vKey, keyDown: false)
         vUp?.flags = .maskCommand
-        let cmdUp = CGEvent(keyboardEventSource: src, virtualKey: 0x37, keyDown: false)
 
-        cmdDown?.post(tap: .cghidEventTap)
         vDown?.post(tap: .cghidEventTap)
         vUp?.post(tap: .cghidEventTap)
-        cmdUp?.post(tap: .cghidEventTap)
+    }
+
+    private func ensureAccessibilityTrusted() -> Bool {
+        // Prompt user on first use.
+        let opts: NSDictionary = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true]
+        return AXIsProcessTrustedWithOptions(opts)
+    }
+
+    private func showAccessibilityPermissionAlert() {
+        let bid = Bundle.main.bundleIdentifier ?? "(unknown bundle id)"
+        let bpath = Bundle.main.bundlePath
+
+        let alert = NSAlert()
+        alert.messageText = "ClipboardTool needs Accessibility permission"
+        alert.informativeText = "To paste into other apps automatically (Cmd+V), enable this exact app in System Settings → Privacy & Security → Accessibility (and possibly Input Monitoring).\n\nBundle ID: \(bid)\nApp Path: \(bpath)\n\nThe text is already copied to your clipboard; you can paste manually with Cmd+V."
+        alert.addButton(withTitle: "Open Accessibility Settings")
+        alert.addButton(withTitle: "OK")
+
+        let resp = alert.runModal()
+        if resp == .alertFirstButtonReturn {
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     @objc private func quit() {

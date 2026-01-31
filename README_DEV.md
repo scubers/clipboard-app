@@ -28,10 +28,11 @@
   2) switch back to the previous app
   3) send a synthetic **Cmd+V** to paste into the previous app's focused input.
 
-**Permissions:** sending synthetic keystrokes typically requires macOS Privacy permissions:
-- System Settings → Privacy & Security → **Accessibility** (and/or **Input Monitoring**)
+**Permissions:** automatic paste uses synthetic keystrokes and requires macOS Privacy permissions:
+- System Settings → Privacy & Security → **Accessibility**
+- (Sometimes) **Input Monitoring**
 
-If permission is missing, the copy-to-clipboard still works, but auto-paste may fail.
+If permission is missing, the copy-to-clipboard still works, but auto-paste will not work.
 
 ### Search debounce
 Search refresh is debounced while typing to avoid excessive queries.
