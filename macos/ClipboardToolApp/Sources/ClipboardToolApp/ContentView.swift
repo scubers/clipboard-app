@@ -104,6 +104,15 @@ struct ContentView: View {
             vm.bootstrap()
             focus = .search
         }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
+            focus = .search
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolItemsChanged)) { _ in
+            // Keep list live if the user isn't actively searching.
+            if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                vm.refresh()
+            }
+        }
         .onChange(of: vm.selectedID) { _, _ in
             vm.loadPreview()
         }

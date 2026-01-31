@@ -13,6 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Menu-bar utility behavior
         NSApp.setActivationPolicy(.accessory)
 
+        // Start clipboard monitoring even if the UI is never opened.
+        SharedAppState.shared.startMonitoring()
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "clipboard", accessibilityDescription: "ClipboardTool")
@@ -64,7 +67,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             let p = NSPanel(contentViewController: hosting)
             p.title = "ClipboardTool"
-            p.setContentSize(NSSize(width: 720, height: 520))
+            // Slightly wider than tall feels more like a clipboard popover.
+            p.setContentSize(NSSize(width: 640, height: 520))
             p.styleMask = [.titled, .closable, .resizable, .utilityWindow]
             p.isReleasedWhenClosed = false
             p.level = .floating
@@ -85,12 +89,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel else { return }
 
-        // Position near status item button if possible
-        if let button = statusItem.button {
-            let btnFrameInScreen = button.window?.convertToScreen(button.frame) ?? .zero
-            let x = max(20, btnFrameInScreen.midX - panel.frame.width / 2)
-            let y = btnFrameInScreen.minY - panel.frame.height - 8
-            panel.setFrameOrigin(NSPoint(x: x, y: max(20, y)))
+        // Position near status item button if possible (popover-like).
+        if let button = statusItem.button,
+           let btnWindow = button.window,
+           let screen = btnWindow.screen {
+            let btnFrameInScreen = btnWindow.convertToScreen(button.frame)
+            let vf = screen.visibleFrame
+
+            var x = btnFrameInScreen.midX - panel.frame.width / 2
+            var y = btnFrameInScreen.minY - panel.frame.height - 8
+
+            // Clamp to visible screen.
+            x = max(vf.minX + 8, min(x, vf.maxX - panel.frame.width - 8))
+            y = max(vf.minY + 8, min(y, vf.maxY - panel.frame.height - 8))
+
+            panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
         NSApp.activate(ignoringOtherApps: true)
@@ -98,6 +111,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.orderFrontRegardless()
         // NSPanel generally cannot become a main window; calling makeMain() can assert.
         panel.makeFirstResponder(panel.contentView)
+
+        // Ask SwiftUI to focus the search field every time we open.
+        NotificationCenter.default.post(name: .clipboardToolFocusSearch, object: nil)
     }
 
     @objc private func openSettings() {

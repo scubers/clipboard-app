@@ -18,59 +18,38 @@ final class ClipboardViewModel: ObservableObject {
     }
 
     // Settings (persisted via UserDefaults)
-    @Published var pollIntervalMs: Double = 500 {
-        didSet { UserDefaults.standard.set(pollIntervalMs, forKey: Keys.pollIntervalMs) }
+    @Published var pollIntervalMs: Double = SharedAppState.shared.pollIntervalMs {
+        didSet {
+            SharedAppState.shared.pollIntervalMs = pollIntervalMs
+            SharedAppState.shared.applyPollInterval()
+        }
     }
-    @Published var monitoringEnabled: Bool = true {
-        didSet { UserDefaults.standard.set(monitoringEnabled, forKey: Keys.monitoringEnabled) }
+    @Published var monitoringEnabled: Bool = SharedAppState.shared.monitoringEnabled {
+        didSet {
+            SharedAppState.shared.monitoringEnabled = monitoringEnabled
+        }
     }
 
     private let core = SharedAppState.shared.core
-    private let monitor = PasteboardMonitor(interval: 0.5)
+    private var monitor: PasteboardMonitor { SharedAppState.shared.monitor }
 
     private enum Keys {
-        static let pollIntervalMs = "ClipboardTool.pollIntervalMs"
-        static let monitoringEnabled = "ClipboardTool.monitoringEnabled"
         static let previewWrap = "ClipboardTool.previewWrap"
         static let previewMonospace = "ClipboardTool.previewMonospace"
     }
 
     init() {
-        let savedMs = UserDefaults.standard.double(forKey: Keys.pollIntervalMs)
-        if savedMs > 0 {
-            pollIntervalMs = savedMs
-        }
-        if UserDefaults.standard.object(forKey: Keys.monitoringEnabled) != nil {
-            monitoringEnabled = UserDefaults.standard.bool(forKey: Keys.monitoringEnabled)
-        }
         if UserDefaults.standard.object(forKey: Keys.previewWrap) != nil {
             previewWrap = UserDefaults.standard.bool(forKey: Keys.previewWrap)
         }
         if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
             previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
         }
-        applyPollInterval()
     }
 
     func bootstrap() {
         do {
             try core.open(dataDir: Self.defaultDataDir)
-
-            monitor.onText = { [weak self] text, sourceApp in
-                guard let self else { return }
-                guard self.monitoringEnabled else { return }
-                do {
-                    try self.core.addText(text, sourceApp: sourceApp)
-                    // If the user isn't actively searching, keep list live.
-                    if self.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        self.refresh()
-                    }
-                } catch {
-                    self.error = String(describing: error)
-                }
-            }
-
-            monitor.start()
             refresh()
         } catch {
             self.error = String(describing: error)
@@ -91,9 +70,9 @@ final class ClipboardViewModel: ObservableObject {
     }
 
     func applyPollInterval() {
-        let ms = max(100, min(2000, pollIntervalMs))
-        pollIntervalMs = ms
-        monitor.interval = ms / 1000.0
+        SharedAppState.shared.pollIntervalMs = pollIntervalMs
+        SharedAppState.shared.applyPollInterval()
+        pollIntervalMs = SharedAppState.shared.pollIntervalMs
     }
 
     func loadPreview() {
