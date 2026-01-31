@@ -18,12 +18,14 @@
 		901E8EE55E1D6A53B7EA2832 /* CoreBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4071ECE9A971407825EF6A19 /* CoreBridge.swift */; };
 		AF5DC7E3E3DE33679859855C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55AD1DD3401253953CCACF62 /* SettingsView.swift */; };
 		B0769E2E5E1307CC889194B1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4F94B3D6E34011EF938394 /* ContentView.swift */; };
+		C3491BCFE0670D6F8B61FA46 /* HotkeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 286FB8833876B619AC352EED /* HotkeyRecorder.swift */; };
 		D8FBE23B0CA0263947449547 /* ExportImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2576F17C522712B504AB2B2 /* ExportImportView.swift */; };
 		F4A6C92478BF74120AE29AC8 /* HotkeySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5EF3E9DFB093942643E0692 /* HotkeySettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1E68938A58F135DC3D556DC5 /* PreviewSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSettings.swift; sourceTree = "<group>"; };
+		286FB8833876B619AC352EED /* HotkeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorder.swift; sourceTree = "<group>"; };
 		33BA04142C3A0EBCBFF8DB63 /* ClipboardToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardToolApp.swift; sourceTree = "<group>"; };
 		34AA1D81494529E932E79B73 /* ClipboardTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipboardTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4071ECE9A971407825EF6A19 /* CoreBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBridge.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 				4071ECE9A971407825EF6A19 /* CoreBridge.swift */,
 				F2576F17C522712B504AB2B2 /* ExportImportView.swift */,
 				E79DF0933C847F51BB4A7D7B /* HotkeyManager.swift */,
+				286FB8833876B619AC352EED /* HotkeyRecorder.swift */,
 				D5EF3E9DFB093942643E0692 /* HotkeySettingsView.swift */,
 				ED3F62E153D43D8E831C19B5 /* LaunchAtLoginManager.swift */,
 				B6AB1E1CBC6007EB007A4480 /* PasteboardMonitor.swift */,
@@ -178,6 +181,7 @@
 				901E8EE55E1D6A53B7EA2832 /* CoreBridge.swift in Sources */,
 				D8FBE23B0CA0263947449547 /* ExportImportView.swift in Sources */,
 				51DD0510C331C3960063E447 /* HotkeyManager.swift in Sources */,
+				C3491BCFE0670D6F8B61FA46 /* HotkeyRecorder.swift in Sources */,
 				F4A6C92478BF74120AE29AC8 /* HotkeySettingsView.swift in Sources */,
 				39A288659DCDFC0C1F8DFB32 /* LaunchAtLoginManager.swift in Sources */,
 				7B4CF6AF34C6CC6ED36BF8B9 /* PasteboardMonitor.swift in Sources */,

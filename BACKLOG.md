@@ -19,7 +19,7 @@ This file tracks deferred work and known improvements (due to prioritization or 
 - [x] Convert SwiftPM project into a proper Xcode `.app` project for distribution (XcodeGen).
 - [ ] Real menu bar UI + window/panel behavior (popover/panel), plus better keyboard navigation (search→list focus transitions).
 - [x] User-configurable global hotkey (preset picker + enable toggle).
-- [ ] Improve hotkey UX: record arbitrary key combo (instead of presets).
+- [x] Improve hotkey UX: record arbitrary key combo (instead of presets).
 - [ ] (Optional) Move UI-side settings persistence from UserDefaults to core `settings.json` (single-dir portability).
 - [x] Launch at login toggle (via `SMAppService.mainApp`; may require signed/installed app).
 - [x] Better preview UI for long text (wrap toggle, monospace toggle).

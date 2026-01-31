@@ -11,9 +11,26 @@ final class HotkeyManager: ObservableObject {
         didSet { UserDefaults.standard.set(enabled, forKey: Keys.enabled) }
     }
 
-    /// Stored as an identifier string, e.g. "cmd+shift+v".
+    /// Preset hotkey identifier, e.g. "cmd+shift+v".
+    /// If a custom hotkey is recorded, we store raw keyCode+modifiers instead.
     @Published var hotkeyId: String {
         didSet { UserDefaults.standard.set(hotkeyId, forKey: Keys.hotkeyId) }
+    }
+
+    @Published var customKeyCode: UInt32 {
+        didSet { UserDefaults.standard.set(Int(customKeyCode), forKey: Keys.customKeyCode) }
+    }
+
+    @Published var customCarbonModifiers: UInt32 {
+        didSet { UserDefaults.standard.set(Int(customCarbonModifiers), forKey: Keys.customMods) }
+    }
+
+    @Published var customDisplay: String {
+        didSet { UserDefaults.standard.set(customDisplay, forKey: Keys.customDisplay) }
+    }
+
+    @Published var useCustom: Bool {
+        didSet { UserDefaults.standard.set(useCustom, forKey: Keys.useCustom) }
     }
 
     private var hotKeyRef: EventHotKeyRef?
@@ -25,6 +42,10 @@ final class HotkeyManager: ObservableObject {
     private enum Keys {
         static let enabled = "ClipboardTool.hotkey.enabled"
         static let hotkeyId = "ClipboardTool.hotkey.id"
+        static let useCustom = "ClipboardTool.hotkey.useCustom"
+        static let customKeyCode = "ClipboardTool.hotkey.customKeyCode"
+        static let customMods = "ClipboardTool.hotkey.customMods"
+        static let customDisplay = "ClipboardTool.hotkey.customDisplay"
     }
 
     private init() {
@@ -34,6 +55,16 @@ final class HotkeyManager: ObservableObject {
             enabled = false
         }
         hotkeyId = UserDefaults.standard.string(forKey: Keys.hotkeyId) ?? "cmd+shift+v"
+
+        if UserDefaults.standard.object(forKey: Keys.useCustom) != nil {
+            useCustom = UserDefaults.standard.bool(forKey: Keys.useCustom)
+        } else {
+            useCustom = false
+        }
+
+        customKeyCode = UInt32(UserDefaults.standard.integer(forKey: Keys.customKeyCode))
+        customCarbonModifiers = UInt32(UserDefaults.standard.integer(forKey: Keys.customMods))
+        customDisplay = UserDefaults.standard.string(forKey: Keys.customDisplay) ?? ""
 
         installHandlerIfNeeded()
         refreshRegistration()
@@ -47,7 +78,6 @@ final class HotkeyManager: ObservableObject {
     }
 
     func availableHotkeys() -> [String] {
-        // V1: keep it simple with presets. Later we can add a recorder control.
         [
             "cmd+shift+v",
             "cmd+shift+space",
@@ -55,6 +85,14 @@ final class HotkeyManager: ObservableObject {
             "ctrl+opt+v",
             "ctrl+opt+space"
         ]
+    }
+
+    func setCustom(keyCode: UInt32, carbonModifiers: UInt32, display: String) {
+        customKeyCode = keyCode
+        customCarbonModifiers = carbonModifiers
+        customDisplay = display
+        useCustom = true
+        refreshRegistration()
     }
 
     func setHotkey(id: String) {
@@ -65,6 +103,12 @@ final class HotkeyManager: ObservableObject {
     func refreshRegistration() {
         unregister()
         guard enabled else { return }
+
+        if useCustom, customKeyCode != 0, customCarbonModifiers != 0 {
+            register(keyCode: customKeyCode, modifiers: customCarbonModifiers)
+            return
+        }
+
         guard let parsed = Self.parseHotkey(id: hotkeyId) else { return }
         register(keyCode: parsed.keyCode, modifiers: parsed.modifiers)
     }
