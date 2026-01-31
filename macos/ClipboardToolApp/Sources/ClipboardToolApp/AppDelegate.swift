@@ -3,8 +3,9 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
-    private var windowController: NSWindowController?
+    private var panel: NSPanel?
     private var localKeyMonitor: Any?
+    private var appDeactivateObserver: Any?
 
     private let hotkey = HotkeyManager.shared
 
@@ -25,45 +26,78 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
 
         hotkey.onTrigger = { [weak self] in
-            self?.openClipboard()
+            self?.toggleClipboardPanel()
+        }
+
+        // Hide panel when app deactivates (clicking outside / switching apps)
+        appDeactivateObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.panel?.orderOut(nil)
         }
 
         // Create window lazily
     }
 
     @objc private func openClipboard() {
-        if windowController == nil {
+        // When triggered from the status bar menu, showing a window immediately can be swallowed
+        // by the menu run loop. Deferring to the next tick avoids the “need to click twice” issue.
+        DispatchQueue.main.async { [weak self] in
+            self?.showClipboardPanel()
+        }
+    }
+
+    @objc private func toggleClipboardPanel() {
+        if let panel, panel.isVisible {
+            panel.orderOut(nil)
+            return
+        }
+        showClipboardPanel()
+    }
+
+    private func showClipboardPanel() {
+        if panel == nil {
             let view = ContentView()
             let hosting = NSHostingController(rootView: view)
 
-            let window = NSWindow(contentViewController: hosting)
-            window.title = "ClipboardTool"
-            window.setContentSize(NSSize(width: 520, height: 640))
-            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-            window.isReleasedWhenClosed = false
+            let p = NSPanel(contentViewController: hosting)
+            p.title = "ClipboardTool"
+            p.setContentSize(NSSize(width: 720, height: 520))
+            p.styleMask = [.titled, .closable, .resizable, .utilityWindow]
+            p.isReleasedWhenClosed = false
+            p.level = .floating
+            p.collectionBehavior = [.moveToActiveSpace]
+            p.hidesOnDeactivate = true
 
-            windowController = NSWindowController(window: window)
-
-            // ESC to close (tool-like behavior)
-            localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak window] event in
-                if event.keyCode == 53 { // ESC
-                    window?.performClose(nil)
+            // ESC to close
+            localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak p] event in
+                if event.keyCode == 53 {
+                    p?.orderOut(nil)
                     return nil
                 }
                 return event
             }
+
+            panel = p
         }
 
-        // Bring app to front and ensure the window can receive keyboard input.
-        NSApp.activate(ignoringOtherApps: true)
-        windowController?.showWindow(nil)
-        if let window = windowController?.window {
-            window.makeKeyAndOrderFront(nil)
-            window.makeMain()
-            window.orderFrontRegardless()
-            // Make sure a responder exists (SwiftUI FocusState will then take effect).
-            window.makeFirstResponder(window.contentView)
+        guard let panel else { return }
+
+        // Position near status item button if possible
+        if let button = statusItem.button {
+            let btnFrameInScreen = button.window?.convertToScreen(button.frame) ?? .zero
+            let x = max(20, btnFrameInScreen.midX - panel.frame.width / 2)
+            let y = btnFrameInScreen.minY - panel.frame.height - 8
+            panel.setFrameOrigin(NSPoint(x: x, y: max(20, y)))
         }
+
+        NSApp.activate(ignoringOtherApps: true)
+        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
+        // NSPanel generally cannot become a main window; calling makeMain() can assert.
+        panel.makeFirstResponder(panel.contentView)
     }
 
     @objc private func openSettings() {
@@ -74,6 +108,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func quit() {
         if let localKeyMonitor {
             NSEvent.removeMonitor(localKeyMonitor)
+        }
+        if let appDeactivateObserver {
+            NotificationCenter.default.removeObserver(appDeactivateObserver)
         }
         NSApp.terminate(nil)
     }

@@ -18,6 +18,7 @@ This file tracks deferred work and known improvements (due to prioritization or 
 - [x] Build a runnable `.app` bundle for local testing (scripted).
 - [x] Convert SwiftPM project into a proper Xcode `.app` project for distribution (XcodeGen).
 - [ ] Real menu bar UI + window/panel behavior (popover/panel), plus better keyboard navigation (search→list focus transitions).
+  - In progress: switched main window to a floating NSPanel that hides on deactivate.
 - [x] User-configurable global hotkey (preset picker + enable toggle).
 - [x] Improve hotkey UX: record arbitrary key combo (instead of presets).
 - [ ] (Optional) Move UI-side settings persistence from UserDefaults to core `settings.json` (single-dir portability).
