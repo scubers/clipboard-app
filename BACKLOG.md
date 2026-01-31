@@ -15,8 +15,8 @@ This file tracks deferred work and known improvements (due to prioritization or 
   - [x] integrity_check helper
 
 ## macOS App (SwiftUI)
-- [x] Build a runnable `.app` bundle for local testing (scripted). (See scripts/build_macos_app_bundle.sh)
-- [ ] Convert SwiftPM project into a proper Xcode `.app` project for distribution.
+- [x] Build a runnable `.app` bundle for local testing (scripted).
+- [x] Convert SwiftPM project into a proper Xcode `.app` project for distribution (XcodeGen).
 - [ ] Real menu bar UI + window/panel behavior (popover/panel), plus better keyboard navigation (search→list focus transitions).
 - [x] User-configurable global hotkey (preset picker + enable toggle).
 - [ ] Improve hotkey UX: record arbitrary key combo (instead of presets).

@@ -29,6 +29,10 @@ macos/ClipboardToolApp/Vendor/core/*.dylib
 macos/ClipboardToolApp/Resources/*.dylib
 macos/build/
 
+# Xcode project user state
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
 # (Optional) if you generate release artifacts
 *.dmg
 *.zip

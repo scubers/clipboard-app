@@ -1,0 +1,42 @@
+name: ClipboardTool
+options:
+  bundleIdPrefix: com.jaylen
+  deploymentTarget:
+    macOS: '14.0'
+  xcodeVersion: '26.2'
+settings:
+  base:
+    SWIFT_VERSION: '5.9'
+    PRODUCT_NAME: ClipboardTool
+    CURRENT_PROJECT_VERSION: '0.1.0'
+    MARKETING_VERSION: '0.1.0'
+    LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Resources"
+
+targets:
+  ClipboardTool:
+    type: application
+    platform: macOS
+    sources:
+      - path: ../ClipboardToolApp/Sources/ClipboardToolApp
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+        INFOPLIST_KEY_LSUIElement: YES
+        # Link against Go core dylib
+        OTHER_LDFLAGS: "$(inherited) -L$(SRCROOT)/../../core/build -lclipboardtool"
+    preBuildScripts:
+      - name: Build Go core dylib
+        script: |
+          set -euo pipefail
+          cd "${SRCROOT}/../.."
+          ./scripts/build_core.sh
+    postBuildScripts:
+      - name: Embed Go core dylib
+        script: |
+          set -euo pipefail
+          SRCROOT_DIR="${SRCROOT}/../.."
+          DYL="${SRCROOT_DIR}/core/build/libclipboardtool.dylib"
+          DEST="${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Resources/libclipboardtool.dylib"
+          mkdir -p "$(dirname "$DEST")"
+          cp -f "$DYL" "$DEST"
