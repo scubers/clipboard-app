@@ -6,11 +6,10 @@ package main
 import "C"
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode"
@@ -60,8 +59,7 @@ func makeSummary(s string, maxChars int) string {
 }
 
 func sha256Hex(s string) string {
-	h := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(h[:])
+	return sha256HexBytes([]byte(s))
 }
 
 func getDB(c *core) (*sql.DB, error) {
@@ -184,6 +182,145 @@ func ct_items_add_text(corePtr *C.void, textUTF8 *C.char, sourceApp *C.char, cre
 	if outID != nil {
 		*outID = C.CString(id)
 	}
+	return ctOK
+}
+
+//export ct_items_add_image
+func ct_items_add_image(corePtr *C.void, mimeC *C.char, dataPtr unsafe.Pointer, dataLen C.int, sourceApp *C.char, createdAtMs C.longlong, outID **C.char) C.int {
+	if corePtr == nil || mimeC == nil || dataPtr == nil || dataLen <= 0 {
+		setErr("invalid arg")
+		return ctErrInvalidArg
+	}
+	if outID != nil {
+		*outID = nil
+	}
+
+	c, ok := getCore(corePtr)
+	if !ok {
+		setErr("invalid core handle")
+		return ctErrInvalidArg
+	}
+
+	s := c.settings
+	if s.PrivacyMode {
+		return ctOK
+	}
+
+	mime := strings.TrimSpace(C.GoString(mimeC))
+	if mime == "" {
+		setErr("mime required")
+		return ctErrInvalidArg
+	}
+
+	b := C.GoBytes(dataPtr, dataLen)
+	if len(b) == 0 {
+		return ctOK
+	}
+
+	created := int64(createdAtMs)
+	hash := sha256HexBytes(b)
+
+	db, err := getDB(c)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrDB
+	}
+
+	dup, err := isRecentDuplicate(db, hash, created)
+	if err != nil {
+		setErr("dedupe query: " + err.Error())
+		return ctErrDB
+	}
+	if dup {
+		return ctOK
+	}
+
+	id := uuid.NewString()
+
+	ext := extFromMime(mime)
+	blobPath, nbytes, err := writeBlobFile(c.dataDir, id, ext, b)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrIO
+	}
+
+	// Best-effort size extraction
+	w, h := 0, 0
+	if meta, ok := sniffImageMeta(mime, b); ok {
+		w, h = meta.width, meta.height
+	}
+
+	summary := "Image"
+	if w > 0 && h > 0 {
+		summary = fmt.Sprintf("Image %dx%d", w, h)
+	}
+	if ext != "" {
+		summary += " (" + ext + ")"
+	}
+
+	var src *string
+	if sourceApp != nil {
+		v := C.GoString(sourceApp)
+		if v != "" {
+			src = &v
+		}
+	}
+
+	_, err = db.Exec(`INSERT INTO items(id, created_at_ms, type, summary, text_content, content_hash, source_app, pinned, deleted_at_ms, blob_path, mime, bytes, width, height)
+		VALUES(?, ?, 'image', ?, '', ?, ?, 0, NULL, ?, ?, ?, ?, ?)`, id, created, summary, hash, src, blobPath, mime, nbytes, w, h)
+	if err != nil {
+		setErr("insert image item: " + err.Error())
+		return ctErrDB
+	}
+
+	if err := enforceRetention(db, s.RetentionMaxItems); err != nil {
+		setErr("retention: " + err.Error())
+		return ctErrDB
+	}
+
+	if outID != nil {
+		*outID = C.CString(id)
+	}
+	return ctOK
+}
+
+//export ct_items_get_blob_path
+func ct_items_get_blob_path(corePtr *C.void, id *C.char, outPath **C.char) C.int {
+	if corePtr == nil || id == nil || outPath == nil {
+		setErr("invalid arg")
+		return ctErrInvalidArg
+	}
+	*outPath = nil
+
+	c, ok := getCore(corePtr)
+	if !ok {
+		setErr("invalid core handle")
+		return ctErrInvalidArg
+	}
+	db, err := getDB(c)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrDB
+	}
+
+	var p sql.NullString
+	err = db.QueryRow(`SELECT blob_path FROM items WHERE id=? AND deleted_at_ms IS NULL`, C.GoString(id)).Scan(&p)
+	if err == sql.ErrNoRows {
+		return ctErrNotFound
+	}
+	if err != nil {
+		setErr("get_blob_path: " + err.Error())
+		return ctErrDB
+	}
+	if !p.Valid || p.String == "" {
+		return ctErrNotFound
+	}
+	// Normalize to absolute path if needed.
+	pp := p.String
+	if !filepath.IsAbs(pp) {
+		pp = filepath.Join(c.dataDir, pp)
+	}
+	*outPath = C.CString(pp)
 	return ctOK
 }
 

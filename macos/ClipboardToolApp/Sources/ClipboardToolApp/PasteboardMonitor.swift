@@ -19,6 +19,7 @@ final class PasteboardMonitor {
     }
 
     var onText: ((String, String?) -> Void)?
+    var onImage: ((Data, String, String?) -> Void)?
 
     init(pasteboard: NSPasteboard = .general, interval: TimeInterval = 0.5) {
         self.pasteboard = pasteboard
@@ -56,10 +57,30 @@ final class PasteboardMonitor {
             return
         }
 
+        // Best-effort source app capture
+        let appName = NSWorkspace.shared.frontmostApplication?.localizedName
+
         if let s = pasteboard.string(forType: .string), !s.isEmpty {
-            // Best-effort source app capture
-            let appName = NSWorkspace.shared.frontmostApplication?.localizedName
             onText?(s, appName)
+            return
+        }
+
+        // Images: try common types
+        // NOTE: we store the original bytes + a mime string; conversion is handled by source app.
+        let candidates: [(NSPasteboard.PasteboardType, String)] = [
+            (.png, "image/png"),
+            (.tiff, "image/tiff"),
+            (NSPasteboard.PasteboardType("public.jpeg"), "image/jpeg"),
+            (NSPasteboard.PasteboardType("public.jpg"), "image/jpeg"),
+            (NSPasteboard.PasteboardType("public.webp"), "image/webp"),
+            (NSPasteboard.PasteboardType("org.webmproject.webp"), "image/webp"),
+        ]
+
+        for (t, mime) in candidates {
+            if let d = pasteboard.data(forType: t), !d.isEmpty {
+                onImage?(d, mime, appName)
+                return
+            }
         }
     }
 }

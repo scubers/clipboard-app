@@ -27,6 +27,12 @@ func ct_items_get_text(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CCh
 @_silgen_name("ct_items_add_text")
 func ct_items_add_text(_ core: UnsafeMutableRawPointer?, _ text: UnsafePointer<CChar>?, _ sourceApp: UnsafePointer<CChar>?, _ createdAtMs: Int64, _ outID: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
 
+@_silgen_name("ct_items_add_image")
+func ct_items_add_image(_ core: UnsafeMutableRawPointer?, _ mime: UnsafePointer<CChar>?, _ dataPtr: UnsafeRawPointer?, _ dataLen: Int32, _ sourceApp: UnsafePointer<CChar>?, _ createdAtMs: Int64, _ outID: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+
+@_silgen_name("ct_items_get_blob_path")
+func ct_items_get_blob_path(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ outPath: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+
 @_silgen_name("ct_items_set_pinned")
 func ct_items_set_pinned(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ pinned: Int32) -> Int32
 
@@ -161,6 +167,43 @@ final class CoreClient {
             throw CoreError.rc(rc, Self.lastError())
         }
         if let outID { ct_free(outID) }
+    }
+
+    func addImage(mime: String, data: Data, sourceApp: String? = nil) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        var outID: UnsafeMutablePointer<CChar>? = nil
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+
+        let rc: Int32 = mime.withCString { cmime in
+            data.withUnsafeBytes { buf in
+                let ptr = buf.baseAddress
+                let len = Int32(buf.count)
+                if let sourceApp {
+                    return sourceApp.withCString { capp in
+                        ct_items_add_image(core, cmime, ptr, len, capp, nowMs, &outID)
+                    }
+                }
+                return ct_items_add_image(core, cmime, ptr, len, nil, nowMs, &outID)
+            }
+        }
+
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+        if let outID { ct_free(outID) }
+    }
+
+    func getBlobPath(id: String) throws -> String {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = id.withCString { cid in
+            ct_items_get_blob_path(core, cid, &out)
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+        defer { if let out { ct_free(out) } }
+        return String(cString: out!)
     }
 
     func getPrivacyMode() throws -> Bool {

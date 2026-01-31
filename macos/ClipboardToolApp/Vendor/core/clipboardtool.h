@@ -155,6 +155,8 @@ extern int ct_db_vacuum(void* corePtr);
 extern int ct_db_optimize(void* corePtr);
 extern int ct_db_integrity_check_json(void* corePtr, char** outJSON);
 extern int ct_items_add_text(void* corePtr, char* textUTF8, char* sourceApp, long long createdAtMs, char** outID);
+extern int ct_items_add_image(void* corePtr, char* mimeC, void* dataPtr, int dataLen, char* sourceApp, long long createdAtMs, char** outID);
+extern int ct_items_get_blob_path(void* corePtr, char* id, char** outPath);
 extern int ct_items_list_json(void* corePtr, int limit, int offset, int includeDeleted, char** outJSON);
 extern int ct_items_get_text(void* corePtr, char* id, char** outText);
 extern int ct_settings_get_privacy_mode(void* corePtr, int* outEnabled);

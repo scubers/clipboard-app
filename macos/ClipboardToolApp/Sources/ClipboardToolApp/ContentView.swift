@@ -52,7 +52,7 @@ struct ContentView: View {
             HStack(spacing: 12) {
                 List(vm.items, selection: $vm.selectedID) { item in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(item.summary).lineLimit(2)
+                        Text((item.type == "image" ? "[img] " : "") + item.summary).lineLimit(2)
                         Text(Date(timeIntervalSince1970: Double(item.createdAtMs) / 1000).formatted())
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -69,14 +69,25 @@ struct ContentView: View {
                         Toggle("Mono", isOn: $vm.previewMonospace)
                     }
 
-                    ScrollView([.vertical, vm.previewWrap ? [] : .horizontal]) {
-                        Text(vm.previewText)
-                            .font(vm.previewMonospace ? .system(.body, design: .monospaced) : .body)
-                            .frame(maxWidth: vm.previewWrap ? .infinity : nil, alignment: .leading)
-                            .fixedSize(horizontal: !vm.previewWrap, vertical: true)
-                            .textSelection(.enabled)
-                            .padding(.top, 4)
-                            .padding(.bottom, 8)
+                    if let img = vm.previewImage {
+                        ScrollView([.vertical, .horizontal]) {
+                            Image(nsImage: img)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 4)
+                                .padding(.bottom, 8)
+                        }
+                    } else {
+                        ScrollView([.vertical, vm.previewWrap ? [] : .horizontal]) {
+                            Text(vm.previewText)
+                                .font(vm.previewMonospace ? .system(.body, design: .monospaced) : .body)
+                                .frame(maxWidth: vm.previewWrap ? .infinity : nil, alignment: .leading)
+                                .fixedSize(horizontal: !vm.previewWrap, vertical: true)
+                                .textSelection(.enabled)
+                                .padding(.top, 4)
+                                .padding(.bottom, 8)
+                        }
                     }
 
                     Spacer()

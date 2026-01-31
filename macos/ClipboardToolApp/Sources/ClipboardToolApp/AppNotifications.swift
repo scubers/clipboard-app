@@ -8,4 +8,5 @@ extension Notification.Name {
 
 enum ClipboardToolNotificationKeys {
     static let text = "text"
+    static let kind = "kind" // "text" | "image"
 }

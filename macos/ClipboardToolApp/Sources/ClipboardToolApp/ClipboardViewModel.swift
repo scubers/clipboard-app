@@ -10,6 +10,7 @@ final class ClipboardViewModel: ObservableObject {
     private var queryCancellable: AnyCancellable?
     @Published var selectedID: String?
     @Published var previewText: String = ""
+    @Published var previewImage: NSImage?
     @Published var error: String?
 
     // Preview settings (persisted via UserDefaults)
@@ -90,10 +91,20 @@ final class ClipboardViewModel: ObservableObject {
     func loadPreview() {
         guard let id = selectedID else {
             previewText = ""
+            previewImage = nil
             return
         }
         do {
             error = nil
+
+            if let item = items.first(where: { $0.id == id }), item.type == "image" {
+                let p = try core.getBlobPath(id: id)
+                previewImage = NSImage(contentsOfFile: p)
+                previewText = previewImage == nil ? "(Failed to load image preview)" : ""
+                return
+            }
+
+            previewImage = nil
             previewText = try core.getText(id: id)
         } catch {
             self.error = String(describing: error)
@@ -106,9 +117,16 @@ final class ClipboardViewModel: ObservableObject {
             // Avoid feedback loop: our own copy action changes pasteboard.
             monitor.suppress(for: max(0.6, monitor.interval * 2))
 
-            let text = try core.getText(id: id)
             let pb = NSPasteboard.general
             pb.clearContents()
+
+            if let item = items.first(where: { $0.id == id }), item.type == "image" {
+                let p = try core.getBlobPath(id: id)
+                try writeImageToPasteboard(filePath: p)
+                return
+            }
+
+            let text = try core.getText(id: id)
             pb.setString(text, forType: .string)
         } catch {
             self.error = String(describing: error)
@@ -121,15 +139,31 @@ final class ClipboardViewModel: ObservableObject {
             // Avoid feedback loop: our own copy action changes pasteboard.
             monitor.suppress(for: max(0.6, monitor.interval * 2))
 
-            let text = try core.getText(id: id)
+            // Copy selected item to system clipboard.
             let pb = NSPasteboard.general
             pb.clearContents()
+
+            if let item = items.first(where: { $0.id == id }), item.type == "image" {
+                let p = try core.getBlobPath(id: id)
+                try writeImageToPasteboard(filePath: p)
+                NotificationCenter.default.post(
+                    name: .clipboardToolPasteSelection,
+                    object: nil,
+                    userInfo: [ClipboardToolNotificationKeys.kind: "image"]
+                )
+                return
+            }
+
+            let text = try core.getText(id: id)
             pb.setString(text, forType: .string)
 
             NotificationCenter.default.post(
                 name: .clipboardToolPasteSelection,
                 object: nil,
-                userInfo: [ClipboardToolNotificationKeys.text: text]
+                userInfo: [
+                    ClipboardToolNotificationKeys.kind: "text",
+                    ClipboardToolNotificationKeys.text: text,
+                ]
             )
         } catch {
             self.error = String(describing: error)
@@ -143,6 +177,39 @@ final class ClipboardViewModel: ObservableObject {
         } catch {
             self.error = String(describing: error)
         }
+    }
+
+    private func writeImageToPasteboard(filePath: String) throws {
+        let url = URL(fileURLWithPath: filePath)
+        let ext = url.pathExtension.lowercased()
+
+        let pb = NSPasteboard.general
+        pb.clearContents()
+
+        let item = NSPasteboardItem()
+
+        // 1) Put original bytes for apps that prefer the source type
+        let original = try Data(contentsOf: url)
+        switch ext {
+        case "png":
+            item.setData(original, forType: .png)
+        case "jpg", "jpeg":
+            item.setData(original, forType: NSPasteboard.PasteboardType("public.jpeg"))
+        case "tif", "tiff":
+            item.setData(original, forType: .tiff)
+        case "webp":
+            item.setData(original, forType: NSPasteboard.PasteboardType("public.webp"))
+        default:
+            break
+        }
+
+        // 2) Also provide a TIFF representation for broad compatibility
+        if let img = NSImage(contentsOf: url),
+           let tiff = img.tiffRepresentation {
+            item.setData(tiff, forType: .tiff)
+        }
+
+        pb.writeObjects([item])
     }
 
     static var defaultDataDir: String {

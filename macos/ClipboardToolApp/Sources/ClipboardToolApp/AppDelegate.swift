@@ -141,7 +141,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Hide panel first so we don't interfere with the target app's input.
         panel?.orderOut(nil)
 
-        guard let text = note.userInfo?[ClipboardToolNotificationKeys.text] as? String else {
+        let kind = (note.userInfo?[ClipboardToolNotificationKeys.kind] as? String) ?? "text"
+        let text = note.userInfo?[ClipboardToolNotificationKeys.text] as? String
+
+        // For image paste we may not have a text payload; that's ok.
+        if kind == "text" && (text == nil) {
             return
         }
 
@@ -158,11 +162,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // Paste via synthetic Cmd+V. Some apps need a short delay after activation before accepting keystrokes.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) { [weak self] in
+        // Empirically, image paste can require more time for the pasteboard to settle (e.g. WeChat).
+        let delay: TimeInterval = (kind == "image") ? 0.28 : 0.10
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             self?.sendPasteKeystroke()
         }
 
-        // Note: we rely on the system pasteboard already containing `text`.
+        // Note: we rely on the system pasteboard already containing the selected content.
         _ = text
     }
 

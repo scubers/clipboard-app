@@ -54,6 +54,17 @@ final class SharedAppState: ObservableObject {
                 // Swallow errors: we don't want clipboard monitoring to crash the app.
             }
         }
+
+        monitor.onImage = { [weak self] data, mime, sourceApp in
+            guard let self else { return }
+            guard self.monitoringEnabled else { return }
+            do {
+                try self.core.addImage(mime: mime, data: data, sourceApp: sourceApp)
+                NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+            } catch {
+                // Swallow errors: we don't want clipboard monitoring to crash the app.
+            }
+        }
         monitor.start()
     }
 }
