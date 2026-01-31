@@ -47,6 +47,26 @@ if command -v install_name_tool >/dev/null 2>&1; then
   install_name_tool -add_rpath "@executable_path/../Resources" "$MACOS_DIR/$APP_NAME" 2>/dev/null || true
 fi
 
+# Sanity checks
+if [ ! -f "$MACOS_DIR/$APP_NAME" ]; then
+  echo "[bundle] ERROR: missing executable at $MACOS_DIR/$APP_NAME" >&2
+  exit 1
+fi
+if [ ! -f "$RES_DIR/libclipboardtool.dylib" ]; then
+  echo "[bundle] ERROR: missing dylib at $RES_DIR/libclipboardtool.dylib" >&2
+  exit 1
+fi
+
+# Remove quarantine bit if any (helps when moving around)
+if command -v xattr >/dev/null 2>&1; then
+  xattr -dr com.apple.quarantine "$APP_DIR" 2>/dev/null || true
+fi
+
+# Ad-hoc codesign (helps avoid "damaged" dialog on some systems)
+if command -v codesign >/dev/null 2>&1; then
+  codesign --force --deep --sign - "$APP_DIR" 2>/dev/null || true
+fi
+
 # Minimal Info.plist
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
