@@ -1,0 +1,44 @@
+# Clipboard Tool — V1 Tasks
+
+## Milestone 0: Repo skeleton
+- [x] Create repo layout: `macos/` (SwiftUI app), `core/` (Go), `docs/`.
+- [x] Add build scripts for Go → C library.
+
+## Milestone 1: Go core (local persistence)
+- [x] Define data model (ClipboardItem).
+- [x] Implement SQLite schema + migrations.
+- [x] Implement insert item (text only first).
+- [x] Implement list items (pagination).
+- [x] Implement search (LIKE substring match on summary/content for text).
+- [x] Implement retention policy (max N, keep pinned).
+- [x] Implement privacy mode flag in settings.
+- [x] Implement pin/unpin.
+- [x] Implement soft delete.
+- [x] Extend search to support includeDeleted (without breaking ABI).
+- [x] Implement clear-all history API.
+- [x] Implement DB maintenance APIs (vacuum/optimize).
+- [x] Implement stats API.
+
+## Milestone 2: SwiftUI macOS app
+- [x] Menu bar app scaffold (SwiftPM buildable).
+- [x] Settings screen (data dir, retention, poll interval, privacy toggle).
+- [x] User-configurable global hotkey (no default).
+- [x] Clipboard polling loop (NSPasteboard) + user-configurable interval.
+- [x] Dedupe consecutive identical (core) + suppress self-copy feedback loop (UI).
+- [x] List UI + search box.
+- [x] Preview selected item (text).
+- [x] Copy selected item back to clipboard (Enter / Cmd+C).
+- [x] Auto-focus search field on open.
+- [x] Keyboard: Down arrow from search focuses list + selects first item.
+
+## Milestone 3: Packaging & DX
+- [ ] Launch at login toggle.
+- [ ] Minimal logging.
+- [x] DB integrity check helper.
+- [x] Export/import by moving the single data directory (core API + Settings UI).
+
+## Acceptance criteria (V1)
+- Captures text clipboard reliably.
+- Search works on last 500 items.
+- All persistent data lives under one directory.
+- Privacy mode stops capturing.

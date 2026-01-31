@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Go
+*.test
+*.out
+core/build/
+
+# SwiftPM
+.build/
+**/.build/
+Package.resolved
+
+# Xcode
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+
+# App runtime data (local-only; not source)
+output/
+
+# macOS app vendor/runtime copied binaries
+macos/ClipboardToolApp/Vendor/core/*.dylib
+macos/ClipboardToolApp/Resources/*.dylib
+macos/build/
+
+# (Optional) if you generate release artifacts
+*.dmg
+*.zip
