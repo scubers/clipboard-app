@@ -21,7 +21,7 @@ This file tracks deferred work and known improvements (due to prioritization or 
 - [x] User-configurable global hotkey (preset picker + enable toggle).
 - [ ] Improve hotkey UX: record arbitrary key combo (instead of presets).
 - [ ] (Optional) Move UI-side settings persistence from UserDefaults to core `settings.json` (single-dir portability).
-- [ ] Launch at login (best done after we ship a real `.app` bundle; SwiftPM exec isn’t ideal).
+- [x] Launch at login toggle (via `SMAppService.mainApp`; may require signed/installed app).
 - [x] Better preview UI for long text (wrap toggle, monospace toggle).
 - [ ] Preview extras: search-within-preview, jump-to-top/bottom, copy-without-format.
 

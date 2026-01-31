@@ -29,6 +29,26 @@ struct SettingsView: View {
             HotkeySettingsView()
             ExportImportView()
 
+            Section("Startup") {
+                Toggle("Launch at login", isOn: Binding(
+                    get: { LaunchAtLoginManager.shared.enabled },
+                    set: { newValue in
+                        Task { @MainActor in
+                            do {
+                                try LaunchAtLoginManager.shared.setEnabled(newValue)
+                            } catch {
+                                self.error = "Launch at login failed: \(error)" 
+                                LaunchAtLoginManager.shared.refresh()
+                            }
+                        }
+                    }
+                ))
+
+                Text("Note: may require the app to be code-signed and installed (e.g., in /Applications) to work reliably.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Capture") {
                 Toggle("Privacy Mode (stop capturing new items)", isOn: $privacyMode)
                     .onChange(of: privacyMode) { _, newValue in

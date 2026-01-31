@@ -32,7 +32,7 @@
 - [x] Keyboard: Down arrow from search focuses list + selects first item.
 
 ## Milestone 3: Packaging & DX
-- [ ] Launch at login toggle.
+- [x] Launch at login toggle.
 - [ ] Minimal logging.
 - [x] DB integrity check helper.
 - [x] Export/import by moving the single data directory (core API + Settings UI).
