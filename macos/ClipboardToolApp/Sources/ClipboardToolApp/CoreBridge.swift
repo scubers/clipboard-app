@@ -141,12 +141,21 @@ final class CoreClient {
         return String(cString: out!)
     }
 
-    func addText(_ text: String) throws {
+    func addText(_ text: String, sourceApp: String? = nil) throws {
         guard let core else { throw CoreError.rc(-1, "core not opened") }
         var outID: UnsafeMutablePointer<CChar>? = nil
         let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
-        let rc = text.withCString { ctext in
-            ct_items_add_text(core, ctext, nil, nowMs, &outID)
+        let rc: Int32
+        if let sourceApp {
+            rc = sourceApp.withCString { capp in
+                text.withCString { ctext in
+                    ct_items_add_text(core, ctext, capp, nowMs, &outID)
+                }
+            }
+        } else {
+            rc = text.withCString { ctext in
+                ct_items_add_text(core, ctext, nil, nowMs, &outID)
+            }
         }
         if rc != 0 {
             throw CoreError.rc(rc, Self.lastError())

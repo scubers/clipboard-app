@@ -18,7 +18,7 @@ final class PasteboardMonitor {
         }
     }
 
-    var onText: ((String) -> Void)?
+    var onText: ((String, String?) -> Void)?
 
     init(pasteboard: NSPasteboard = .general, interval: TimeInterval = 0.5) {
         self.pasteboard = pasteboard
@@ -57,7 +57,9 @@ final class PasteboardMonitor {
         }
 
         if let s = pasteboard.string(forType: .string), !s.isEmpty {
-            onText?(s)
+            // Best-effort source app capture
+            let appName = NSWorkspace.shared.frontmostApplication?.localizedName
+            onText?(s, appName)
         }
     }
 }

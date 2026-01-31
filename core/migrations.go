@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-const schemaVersion = 1
+const schemaVersion = 2
 
 func ensureSchema(db *sql.DB) error {
 	// Create meta table
@@ -32,12 +32,23 @@ func ensureSchema(db *sql.DB) error {
 		return fmt.Errorf("db schema version %d is newer than supported %d", cur, schemaVersion)
 	}
 
-	if cur == 0 {
+	if cur < 1 {
 		if err := migrateToV1(db); err != nil {
 			return err
 		}
-		if _, err := db.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', ?)`, fmt.Sprintf("%d", schemaVersion)); err != nil {
-			return fmt.Errorf("set schema_version: %w", err)
+		cur = 1
+		if _, err := db.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', '1')`); err != nil {
+			return fmt.Errorf("set schema_version v1: %w", err)
+		}
+	}
+
+	if cur < 2 {
+		if err := migrateToV2(db); err != nil {
+			return err
+		}
+		cur = 2
+		if _, err := db.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', '2')`); err != nil {
+			return fmt.Errorf("set schema_version v2: %w", err)
 		}
 	}
 

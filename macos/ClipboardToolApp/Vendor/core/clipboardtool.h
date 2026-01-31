@@ -24,6 +24,12 @@ extern const char *_GoStringPtr(_GoString_ s);
 #line 3 "clipboardtool.go"
 
 #include <stdlib.h>
+#include <pthread.h>
+
+static uintptr_t ct_thread_id() {
+    // pthread_t is opaque; casting is OK for use as a map key within a process.
+    return (uintptr_t)pthread_self();
+}
 
 #line 1 "cgo-generated-wrapper"
 

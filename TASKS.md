@@ -9,7 +9,7 @@
 - [x] Implement SQLite schema + migrations.
 - [x] Implement insert item (text only first).
 - [x] Implement list items (pagination).
-- [x] Implement search (LIKE substring match on summary/content for text).
+- [x] Implement search (prefer FTS5 with LIKE fallback).
 - [x] Implement retention policy (max N, keep pinned).
 - [x] Implement privacy mode flag in settings.
 - [x] Implement pin/unpin.

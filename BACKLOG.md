@@ -3,19 +3,20 @@
 This file tracks deferred work and known improvements (due to prioritization or deliberate scope choices), so we can come back and complete/optimize later.
 
 ## Core (Go)
-- [ ] Upgrade search from `LIKE` to **FTS5** (better relevance, speed, tokenization).
-  - Current V1: `LIKE` only; does not support literal search for `%` and `_`.
+- [x] Upgrade search to prefer **FTS5** when available (better relevance, speed, tokenization), with LIKE fallback.
+  - Note: when FTS5 is unavailable, search falls back to `LIKE` (still no literal search for `%` and `_`).
 - [x] Include deleted in search results (implemented as `ct_items_search_json_ex`).
-- [ ] Add per-item `sourceApp` capture on macOS (best-effort; likely needs Accessibility or AX APIs).
-- [ ] Improve error model: make `ct_last_error_message` truly thread-local (currently global string).
-- [ ] Replace handle table with stronger lifetime guarantees (still OK for V1).
+- [x] Add per-item `sourceApp` capture on macOS (best-effort via frontmostApplication.localizedName).
+- [x] Improve error model: make `ct_last_error_message` thread-local (keyed by pthread_self).
+- [x] Replace handle table with stronger lifetime guarantees (use real C-allocated opaque pointers as handles).
 - [ ] Add DB maintenance APIs:
   - [x] vacuum/optimize (done)
   - [x] export/import (directory-based)
   - [x] integrity_check helper
 
 ## macOS App (SwiftUI)
-- [ ] Convert SwiftPM executable into a proper `.app` bundle (Xcode project) for distribution.
+- [ ] Build a runnable `.app` bundle for local testing (scripted).
+- [ ] Convert SwiftPM project into a proper Xcode `.app` project for distribution.
 - [ ] Real menu bar UI + window/panel behavior (popover/panel), plus better keyboard navigation (search→list focus transitions).
 - [x] User-configurable global hotkey (preset picker + enable toggle).
 - [ ] Improve hotkey UX: record arbitrary key combo (instead of presets).

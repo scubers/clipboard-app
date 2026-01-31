@@ -280,13 +280,14 @@ int32_t ct_items_search_json_ex(ct_core* core,
 ```
 
 Search semantics:
-- V1 implementation uses SQLite `LIKE` on `text_content`/`summary`.
-- Note: literal searching for `%` and `_` is **not supported** in the V1 `LIKE` fallback (no `ESCAPE` clause).
+- Implementation prefers SQLite **FTS5** (table `items_fts`) when available.
+  - Query is tokenized; we do a simple prefix match per token and join with `AND`.
+- Fallback: if FTS5 is unavailable (or query errors), use SQLite `LIKE` on `text_content`/`summary`.
+  - Note: literal searching for `%` and `_` is **not supported** in the `LIKE` fallback (no `ESCAPE` clause).
 - `ct_items_search_json` always excludes deleted items.
 - `ct_items_search_json_ex` follows `include_deleted`:
   - `0` => exclude deleted (`deleted_at_ms IS NULL`)
   - `1` => include deleted
-- (Future) Upgrade to FTS5 when we decide to enable it.
 
 ### 7.7 Get full text content
 Swift needs to preview the full text.

@@ -56,11 +56,11 @@ final class ClipboardViewModel: ObservableObject {
         do {
             try core.open(dataDir: Self.defaultDataDir)
 
-            monitor.onText = { [weak self] text in
+            monitor.onText = { [weak self] text, sourceApp in
                 guard let self else { return }
                 guard self.monitoringEnabled else { return }
                 do {
-                    try self.core.addText(text)
+                    try self.core.addText(text, sourceApp: sourceApp)
                     // If the user isn't actively searching, keep list live.
                     if self.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         self.refresh()

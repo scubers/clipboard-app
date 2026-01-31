@@ -6,8 +6,6 @@ package main
 import "C"
 
 import (
-	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -57,6 +55,29 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 		o = 0
 	}
 
+	// Prefer FTS5 when available.
+	if c.hasFTS5 {
+		ftsq := ftsQueryFromUserInput(q)
+		if ftsq != "" {
+			where := "WHERE 1=1"
+			if includeDeleted == 0 {
+				where += " AND items.deleted_at_ms IS NULL"
+			}
+			rows, err := db.Query(fmt.Sprintf(`SELECT items.id, items.created_at_ms, items.type, items.summary, items.source_app, items.pinned
+				FROM items
+				JOIN items_fts ON items_fts.rowid = items.rowid
+				%s
+				AND items_fts MATCH ?
+				ORDER BY items.pinned DESC, items.created_at_ms DESC
+				LIMIT ? OFFSET ?`, where), ftsq, l, o)
+			if err == nil {
+				defer rows.Close()
+				return scanItemsToJSON(rows, l, outJSON)
+			}
+			// fall back to LIKE
+		}
+	}
+
 	pattern := "%" + q + "%"
 
 	where := "WHERE 1=1"
@@ -75,34 +96,5 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 		return ctErrDB
 	}
 	defer rows.Close()
-
-	out := make([]itemRow, 0, l)
-	for rows.Next() {
-		var r itemRow
-		var source sql.NullString
-		var pinned int
-		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
-			setErr("search scan: " + err.Error())
-			return ctErrDB
-		}
-		if source.Valid {
-			s := source.String
-			r.SourceApp = &s
-		}
-		r.Pinned = pinned != 0
-		out = append(out, r)
-	}
-	if err := rows.Err(); err != nil {
-		setErr("search rows: " + err.Error())
-		return ctErrDB
-	}
-
-	b, err := json.Marshal(out)
-	if err != nil {
-		setErr("json marshal: " + err.Error())
-		return ctErrIO
-	}
-
-	*outJSON = (*C.char)(C.CBytes(append(b, 0)))
-	return ctOK
+	return scanItemsToJSON(rows, l, outJSON)
 }
