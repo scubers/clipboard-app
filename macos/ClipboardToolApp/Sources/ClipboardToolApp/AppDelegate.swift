@@ -107,10 +107,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             p.collectionBehavior = [.moveToActiveSpace]
             p.hidesOnDeactivate = true
 
-            // Traffic lights behavior is configurable.
-            let hide = UserDefaults.standard.object(forKey: "ClipboardTool.hideTrafficLights") == nil
-                ? true
-                : UserDefaults.standard.bool(forKey: "ClipboardTool.hideTrafficLights")
+            // Traffic lights behavior is configurable (macos.json in shared dir).
+            let hide = currentHideTrafficLights()
             p.standardWindowButton(.closeButton)?.isHidden = hide
             p.standardWindowButton(.miniaturizeButton)?.isHidden = hide
             p.standardWindowButton(.zoomButton)?.isHidden = hide
@@ -162,9 +160,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         maybeRelocatePanelForCurrentMouseScreen(panel)
 
         // Apply current traffic-light preference each time.
-        let hide = UserDefaults.standard.object(forKey: "ClipboardTool.hideTrafficLights") == nil
-            ? true
-            : UserDefaults.standard.bool(forKey: "ClipboardTool.hideTrafficLights")
+        let hide = currentHideTrafficLights()
         panel.standardWindowButton(.closeButton)?.isHidden = hide
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = hide
         panel.standardWindowButton(.zoomButton)?.isHidden = hide
@@ -257,7 +253,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // Traffic lights are applied inline using UserDefaults (avoid MainActor crossing in AppDelegate).
+    private func currentHideTrafficLights() -> Bool {
+        let sharedDir = AppPaths.effectiveSharedDir().path
+        return MacOSConfigStore.load(sharedDir: sharedDir)?.hideTrafficLights ?? true
+    }
 
     private func applyInitialPanelPlacement(_ panel: NSPanel) {
         if let s = UserDefaults.standard.string(forKey: Keys.panelFrame) {

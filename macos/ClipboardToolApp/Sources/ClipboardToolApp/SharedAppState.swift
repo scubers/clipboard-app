@@ -12,46 +12,48 @@ final class SharedAppState: ObservableObject {
 
     @Published private(set) var sharedDataDir: String = AppPaths.effectiveSharedDir().path
 
-    // UI layout (persisted via UserDefaults)
-    @Published var previewLayout: PreviewLayout = .previewRight {
-        didSet { UserDefaults.standard.set(previewLayout.rawValue, forKey: Keys.previewLayout) }
+    // macOS-only syncable settings (stored in <sharedDir>/config/macos.json)
+    private var macCfg: MacOSConfigStore.Config
+    private var bootstrapping = true
+
+    // UI layout (persisted via macOS config)
+    @Published var previewLayout: PreviewLayout {
+        didSet { persistMacConfigIfReady() }
     }
 
-    // UI appearance tuning (simple)
-    // 0.02 = most transparent (least tint), 0.35 = strongest tint for readability.
-    // Per your request: default to max (better readability on bright backgrounds).
-    @Published var backgroundTint: Double = 0.35 {
-        didSet { UserDefaults.standard.set(backgroundTint, forKey: Keys.backgroundTint) }
+    // UI appearance tuning
+    @Published var backgroundTint: Double {
+        didSet { persistMacConfigIfReady() }
     }
 
-    @Published var hideTrafficLights: Bool = true {
-        didSet { UserDefaults.standard.set(hideTrafficLights, forKey: Keys.hideTrafficLights) }
+    @Published var hideTrafficLights: Bool {
+        didSet { persistMacConfigIfReady() }
     }
 
-    // Preview settings (persisted via UserDefaults)
-    @Published var previewWrap: Bool = true {
-        didSet { UserDefaults.standard.set(previewWrap, forKey: Keys.previewWrap) }
-    }
-    @Published var previewMonospace: Bool = true {
-        didSet { UserDefaults.standard.set(previewMonospace, forKey: Keys.previewMonospace) }
+    // Preview settings
+    @Published var previewWrap: Bool {
+        didSet { persistMacConfigIfReady() }
     }
 
-    // Settings (persisted via UserDefaults)
-    @Published var pollIntervalMs: Double = 500 {
-        didSet { UserDefaults.standard.set(pollIntervalMs, forKey: Keys.pollIntervalMs) }
-    }
-    @Published var monitoringEnabled: Bool = true {
-        didSet { UserDefaults.standard.set(monitoringEnabled, forKey: Keys.monitoringEnabled) }
+    @Published var previewMonospace: Bool {
+        didSet { persistMacConfigIfReady() }
     }
 
-    private enum Keys {
-        static let pollIntervalMs = "ClipboardTool.pollIntervalMs"
-        static let monitoringEnabled = "ClipboardTool.monitoringEnabled"
-        static let previewLayout = "ClipboardTool.previewLayout"
-        static let backgroundTint = "ClipboardTool.backgroundTint"
-        static let previewWrap = "ClipboardTool.previewWrap"
-        static let previewMonospace = "ClipboardTool.previewMonospace"
-        static let hideTrafficLights = "ClipboardTool.hideTrafficLights"
+    // Capture settings (macOS)
+    @Published var pollIntervalMs: Double {
+        didSet {
+            let clamped = max(100, min(2000, pollIntervalMs))
+            if pollIntervalMs != clamped {
+                pollIntervalMs = clamped
+                return
+            }
+            monitor.interval = clamped / 1000.0
+            persistMacConfigIfReady()
+        }
+    }
+
+    @Published var monitoringEnabled: Bool {
+        didSet { persistMacConfigIfReady() }
     }
 
     private init() {
@@ -60,41 +62,43 @@ final class SharedAppState: ObservableObject {
         sharedDataDir = dir
         try? core.open(dataDir: dir)
 
-        let savedMs = UserDefaults.standard.double(forKey: Keys.pollIntervalMs)
-        if savedMs > 0 {
-            pollIntervalMs = savedMs
-        }
-        if UserDefaults.standard.object(forKey: Keys.monitoringEnabled) != nil {
-            monitoringEnabled = UserDefaults.standard.bool(forKey: Keys.monitoringEnabled)
-        }
-
-        if UserDefaults.standard.object(forKey: Keys.previewWrap) != nil {
-            previewWrap = UserDefaults.standard.bool(forKey: Keys.previewWrap)
-        }
-        if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
-            previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
+        // No legacy UserDefaults migration needed (project not shipped yet).
+        let loaded = MacOSConfigStore.load(sharedDir: dir)
+        macCfg = loaded ?? MacOSConfigStore.Config()
+        if loaded == nil {
+            // Create the file so it starts syncing.
+            try? MacOSConfigStore.save(macCfg, sharedDir: dir)
         }
 
-        let savedLayout = UserDefaults.standard.integer(forKey: Keys.previewLayout)
-        if let l = PreviewLayout(rawValue: savedLayout) {
-            previewLayout = l
-        }
+        // Initialize published values.
+        previewLayout = macCfg.previewLayout
+        backgroundTint = macCfg.backgroundTint
+        hideTrafficLights = macCfg.hideTrafficLights
+        previewWrap = macCfg.previewWrap
+        previewMonospace = macCfg.previewMonospace
+        pollIntervalMs = macCfg.pollIntervalMs
+        monitoringEnabled = macCfg.monitoringEnabled
 
-        let savedTint = UserDefaults.standard.double(forKey: Keys.backgroundTint)
-        if savedTint > 0 {
-            backgroundTint = min(0.35, max(0.02, savedTint))
-        }
-
-        if UserDefaults.standard.object(forKey: Keys.hideTrafficLights) != nil {
-            hideTrafficLights = UserDefaults.standard.bool(forKey: Keys.hideTrafficLights)
-        }
-
+        bootstrapping = false
         applyPollInterval()
+    }
+
+    private func persistMacConfigIfReady() {
+        guard !bootstrapping else { return }
+
+        macCfg.previewLayout = previewLayout
+        macCfg.backgroundTint = backgroundTint
+        macCfg.hideTrafficLights = hideTrafficLights
+        macCfg.previewWrap = previewWrap
+        macCfg.previewMonospace = previewMonospace
+        macCfg.pollIntervalMs = pollIntervalMs
+        macCfg.monitoringEnabled = monitoringEnabled
+
+        try? MacOSConfigStore.save(macCfg, sharedDir: sharedDataDir)
     }
 
     func applyPollInterval() {
         let ms = max(100, min(2000, pollIntervalMs))
-        pollIntervalMs = ms
         monitor.interval = ms / 1000.0
     }
 
@@ -109,6 +113,25 @@ final class SharedAppState: ObservableObject {
         // Reopen core against the new directory.
         try core.reopen(dataDir: url.path)
         sharedDataDir = url.path
+
+        // Reload macOS settings for the new shared dir.
+        bootstrapping = true
+        let loaded = MacOSConfigStore.load(sharedDir: url.path)
+        macCfg = loaded ?? MacOSConfigStore.Config()
+        if loaded == nil {
+            try? MacOSConfigStore.save(macCfg, sharedDir: url.path)
+        }
+
+        previewLayout = macCfg.previewLayout
+        backgroundTint = macCfg.backgroundTint
+        hideTrafficLights = macCfg.hideTrafficLights
+        previewWrap = macCfg.previewWrap
+        previewMonospace = macCfg.previewMonospace
+        pollIntervalMs = macCfg.pollIntervalMs
+        monitoringEnabled = macCfg.monitoringEnabled
+
+        bootstrapping = false
+        applyPollInterval()
 
         // Tell UI to refresh.
         notifyDataSourceChanged(storageChanged: true)
