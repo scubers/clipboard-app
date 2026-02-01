@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClipboardTool UI Mock v3</title>
+  <style>
+    :root {
+      --bg0: #f5f5f7;
+      --mat1: rgba(255,255,255,0.62);
+      --mat2: rgba(255,255,255,0.40);
+      --stroke: rgba(0,0,0,0.10);
+      --text0: rgba(0,0,0,0.90);
+      --text1: rgba(0,0,0,0.60);
+      --text2: rgba(0,0,0,0.42);
+      --shadow: 0 18px 60px rgba(0,0,0,0.18);
+      --accent: #0A84FF;
+      --pill: rgba(0,0,0,0.06);
+      --sel: rgba(10,132,255,0.16);
+      --hover: rgba(10,132,255,0.08);
+      --pin: rgba(255,204,0,0.90);
+      --danger: rgba(255,59,48,0.90);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg0: #0b0b0d;
+        --mat1: rgba(28,28,30,0.58);
+        --mat2: rgba(28,28,30,0.40);
+        --stroke: rgba(255,255,255,0.12);
+        --text0: rgba(255,255,255,0.92);
+        --text1: rgba(255,255,255,0.56);
+        --text2: rgba(255,255,255,0.38);
+        --shadow: 0 18px 60px rgba(0,0,0,0.55);
+        --accent: #0A84FF;
+        --pill: rgba(255,255,255,0.08);
+        --sel: rgba(10,132,255,0.22);
+        --hover: rgba(10,132,255,0.12);
+        --pin: rgba(255,214,10,0.95);
+        --danger: rgba(255,69,58,0.92);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 30% 20%, rgba(10,132,255,0.22), transparent 55%),
+                  radial-gradient(900px 520px at 80% 35%, rgba(255,45,85,0.14), transparent 60%),
+                  radial-gradient(900px 520px at 60% 90%, rgba(52,199,89,0.12), transparent 60%),
+                  var(--bg0);
+      color: var(--text0);
+      padding: 28px;
+    }
+
+    .label {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text1);
+      margin: 0 0 12px 6px;
+    }
+
+    .panel {
+      width: 760px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--mat1), var(--mat2));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      overflow: hidden;
+    }
+
+    /* drag handle */
+    .drag { height: 10px; }
+
+    .searchRow {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid var(--stroke);
+      align-items: center;
+    }
+    .search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      min-width: 0;
+    }
+    .search .icon { opacity: .65; }
+    .search .q {
+      color: var(--text2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: var(--pill);
+      font-size: 12px;
+      color: var(--text1);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .iconBtn {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text1);
+      font-size: 14px;
+    }
+
+    .body {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      min-height: 460px;
+    }
+
+    .list {
+      border-right: 1px solid var(--stroke);
+      padding: 12px;
+    }
+
+    .row {
+      padding: 10px 10px;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 8px;
+      border: 1px solid transparent;
+    }
+    .row.selected {
+      background: var(--sel);
+      border-color: rgba(10,132,255,0.25);
+    }
+    .row:hover {
+      background: var(--hover);
+    }
+
+    .type {
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid var(--stroke);
+      margin-top: 2px;
+    }
+
+    .title {
+      font-weight: 650;
+      line-height: 1.25;
+    }
+
+    .sub {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+      color: var(--text1);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .appIcon {
+      width: 14px; height: 14px;
+      border-radius: 4px;
+      border: 1px solid var(--stroke);
+      display: inline-block;
+    }
+    .app-safari { background: linear-gradient(135deg, rgba(10,132,255,0.95), rgba(52,199,89,0.70)); }
+    .app-raycast { background: linear-gradient(135deg, rgba(255,45,85,0.85), rgba(10,132,255,0.70)); }
+    .app-terminal { background: linear-gradient(135deg, rgba(142,142,147,0.80), rgba(99,99,102,0.70)); }
+    .app-wechat { background: linear-gradient(135deg, rgba(52,199,89,0.92), rgba(48,209,88,0.65)); }
+
+    .badge {
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      color: var(--text1);
+      font-size: 11px;
+    }
+
+    .pinGlyph {
+      color: var(--pin);
+      font-size: 13px;
+      margin-left: 2px;
+    }
+
+    .rightMeta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      color: var(--text2);
+      font-size: 12px;
+      padding-top: 2px;
+    }
+
+    .preview {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.07);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 240px;
+    }
+
+    .cardTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cardTitle { font-weight: 650; }
+    .hint { font-size: 12px; color: var(--text1); }
+
+    .content {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text0);
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco; opacity: .92; }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      color: var(--text0);
+      font-weight: 650;
+      font-size: 13px;
+    }
+
+    .btn.primary {
+      border-color: rgba(10,132,255,0.35);
+      background: rgba(10,132,255,0.18);
+    }
+
+    .footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--stroke);
+      display: flex;
+      justify-content: space-between;
+      color: var(--text1);
+      font-size: 12px;
+    }
+
+    /* small layout switch popover */
+    .popover {
+      position: absolute;
+      right: 26px;
+      top: 78px;
+      width: 156px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.32));
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.20);
+      overflow: hidden;
+    }
+    @media (prefers-color-scheme: dark) {
+      .popover {
+        background: linear-gradient(180deg, rgba(28,28,30,0.70), rgba(28,28,30,0.48));
+        box-shadow: 0 18px 60px rgba(0,0,0,0.60);
+      }
+    }
+    .popItem {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text0);
+      font-size: 13px;
+    }
+    .popItem + .popItem { border-top: 1px solid var(--stroke); }
+    .check { color: var(--accent); font-weight: 800; }
+
+    .stage {
+      position: relative;
+      width: 760px;
+    }
+  </style>
+</head>
+<body>
+  <div class="label">v3 — Minimal title, filters on search row, layout switch (L/R/B), subtle pinned glyph, app icons</div>
+
+  <div class="stage">
+    <div class="panel">
+      <div class="drag"></div>
+
+      <div class="searchRow">
+        <div class="search">
+          <div class="icon">⌘</div>
+          <div class="q">Search clipboard…</div>
+        </div>
+
+        <div class="pill">All</div>
+        <div class="pill">Text</div>
+        <div class="pill">Images</div>
+
+        <div class="iconBtn" title="Layout">▦</div>
+      </div>
+
+      <!-- Default layout: list LEFT, preview RIGHT -->
+      <div class="body">
+        <div class="list">
+          <div class="row selected">
+            <div class="type"></div>
+            <div>
+              <div class="title">Fix hot reload bug in settings…</div>
+              <div class="sub"><span class="appIcon app-raycast"></span><span>Raycast</span> · <span>Text</span> <span class="pinGlyph">⦿</span></div>
+            </div>
+            <div class="rightMeta">
+              <div>2 min ago</div>
+              <div style="opacity:.75;">⏎</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="type"></div>
+            <div>
+              <div class="title">https://docs.openclaw.ai/…</div>
+              <div class="sub"><span class="appIcon app-safari"></span><span>Safari</span> · <span>Text</span></div>
+            </div>
+            <div class="rightMeta">
+              <div>11 min ago</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="type"></div>
+            <div>
+              <div class="title">Image 1200×800 (png)</div>
+              <div class="sub"><span class="appIcon app-wechat"></span><span>WeChat</span> · <span>Image</span></div>
+            </div>
+            <div class="rightMeta">
+              <div>1 h ago</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="type"></div>
+            <div>
+              <div class="title">ssh home-server "tail -f"…</div>
+              <div class="sub"><span class="appIcon app-terminal"></span><span>Terminal</span> · <span>Text</span></div>
+            </div>
+            <div class="rightMeta">
+              <div>Yesterday</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="card">
+            <div class="cardTop">
+              <div>
+                <div class="cardTitle">Preview</div>
+                <div class="hint"><span class="appIcon app-raycast"></span> Raycast · 2 min ago <span class="pinGlyph">⦿</span></div>
+              </div>
+              <div class="badge">Pinned</div>
+            </div>
+            <div class="content mono">
+              Update shared data dir should prompt restart…\n\nAlso keep scroll position when reopening panel.\n\n– list scroll restores to last viewed item
+            </div>
+            <div class="actions">
+              <button class="btn">Copy</button>
+              <button class="btn primary">Paste</button>
+            </div>
+          </div>
+          <div class="hint">Tip: ⌘↵ paste to previous app · ⌘C copy</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>↑↓ select · ⌘↵ paste · ⌘C copy · ⌘P pin</div>
+        <div>200 items</div>
+      </div>
+    </div>
+
+    <!-- layout switch popover (option A) -->
+    <div class="popover" aria-label="layout popover">
+      <div class="popItem"><span>Left (L)</span><span class="check">✓</span></div>
+      <div class="popItem"><span>Right (R)</span><span style="opacity:.6;"> </span></div>
+      <div class="popItem"><span>Bottom (B)</span><span style="opacity:.6;"> </span></div>
+    </div>
+  </div>
+</body>
+</html>

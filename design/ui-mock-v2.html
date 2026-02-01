@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClipboardTool UI Mock v2</title>
+  <style>
+    :root {
+      --bg0: #f5f5f7;
+      --bg1: rgba(255,255,255,0.62);
+      --bg2: rgba(255,255,255,0.40);
+      --stroke: rgba(0,0,0,0.10);
+      --text0: rgba(0,0,0,0.90);
+      --text1: rgba(0,0,0,0.60);
+      --shadow: 0 18px 60px rgba(0,0,0,0.18);
+      --accent: #0A84FF;
+      --pill: rgba(0,0,0,0.06);
+      --sel: rgba(10,132,255,0.16);
+      --hover: rgba(10,132,255,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg0: #0b0b0d;
+        --bg1: rgba(28,28,30,0.58);
+        --bg2: rgba(28,28,30,0.40);
+        --stroke: rgba(255,255,255,0.12);
+        --text0: rgba(255,255,255,0.92);
+        --text1: rgba(255,255,255,0.56);
+        --shadow: 0 18px 60px rgba(0,0,0,0.55);
+        --accent: #0A84FF;
+        --pill: rgba(255,255,255,0.08);
+        --sel: rgba(10,132,255,0.22);
+        --hover: rgba(10,132,255,0.12);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 30% 20%, rgba(10,132,255,0.22), transparent 55%),
+                  radial-gradient(900px 520px at 80% 35%, rgba(255,45,85,0.14), transparent 60%),
+                  radial-gradient(900px 520px at 60% 90%, rgba(52,199,89,0.12), transparent 60%),
+                  var(--bg0);
+      color: var(--text0);
+      padding: 28px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .label {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text1);
+      margin: 0 0 10px 6px;
+    }
+
+    .panel {
+      width: 700px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      overflow: hidden;
+    }
+
+    /* Top drag handle (no title row) */
+    .drag {
+      height: 10px;
+      background: transparent;
+    }
+
+    .searchRow {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid var(--stroke);
+      align-items: center;
+    }
+    .search {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      min-width: 0;
+    }
+    .search .icon { opacity: .65; }
+    .search .q {
+      color: var(--text1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: var(--pill);
+      font-size: 12px;
+      color: var(--text1);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .bodyLR {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      min-height: 440px;
+    }
+
+    .bodyBL {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 440px;
+    }
+
+    .list {
+      border-right: 1px solid var(--stroke);
+      padding: 10px;
+    }
+    .list.full {
+      border-right: none;
+      padding: 12px;
+    }
+
+    .item {
+      padding: 10px 10px;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: 22px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 8px;
+      border: 1px solid transparent;
+    }
+    .item.selected {
+      background: var(--sel);
+      border-color: rgba(10,132,255,0.25);
+    }
+    .item:hover {
+      background: var(--hover);
+    }
+
+    .type {
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid var(--stroke);
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+      color: var(--text1);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .appicon {
+      width: 14px; height: 14px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid var(--stroke);
+      display: inline-block;
+    }
+
+    .pinDot {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: rgba(255,204,0,0.85);
+      display: inline-block;
+      box-shadow: 0 0 0 2px rgba(255,204,0,0.18);
+      margin-left: 4px;
+    }
+
+    .preview {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .previewCard {
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.07);
+      padding: 12px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .previewHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .previewTitle { font-weight: 650; }
+    .hint { font-size: 12px; color: var(--text1); }
+
+    .previewBody {
+      color: var(--text0);
+      font-size: 13px;
+      line-height: 1.45;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      color: var(--text0);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn.primary {
+      border-color: rgba(10,132,255,0.35);
+      background: rgba(10,132,255,0.18);
+    }
+
+    .footer {
+      padding: 10px 14px;
+      border-top: 1px solid var(--stroke);
+      display: flex;
+      justify-content: space-between;
+      color: var(--text1);
+      font-size: 12px;
+    }
+
+    .previewBottom {
+      padding: 12px;
+      border-top: 1px solid var(--stroke);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <div>
+      <div class="label">Layout 1 — Preview LEFT (list on right)</div>
+      <div class="panel">
+        <div class="drag"></div>
+
+        <div class="searchRow">
+          <div class="search">
+            <div class="icon">⌘</div>
+            <div class="q">Search clipboard…</div>
+          </div>
+          <div class="pill">All</div>
+          <div class="pill">Text</div>
+          <div class="pill">Images</div>
+        </div>
+
+        <div class="bodyLR">
+          <div class="preview">
+            <div class="previewCard">
+              <div class="previewHeader">
+                <div>
+                  <div class="previewTitle">Preview</div>
+                  <div class="hint"><span class="appicon"></span> Raycast · 2 min ago <span class="pinDot"></span></div>
+                </div>
+                <div class="pill">Pinned</div>
+              </div>
+              <div class="previewBody" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco; opacity:.92;">
+                Update shared data dir should prompt restart…\n\nAlso keep scroll position when reopening panel.
+              </div>
+              <div class="actions">
+                <button class="btn">Copy</button>
+                <button class="btn primary">Paste</button>
+              </div>
+            </div>
+            <div class="hint">Tip: ⌘↵ paste to previous app</div>
+          </div>
+
+          <div class="list">
+            <div class="item selected">
+              <div class="type"></div>
+              <div>
+                <div style="font-weight:650;">Fix hot reload bug in settings…</div>
+                <div class="meta"><span class="appicon"></span><span>Raycast</span> · <span>2 min ago</span> · <span>Text</span><span class="pinDot"></span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⌘C</div>
+            </div>
+            <div class="item">
+              <div class="type"></div>
+              <div>
+                <div style="font-weight:650;">https://docs.openclaw.ai/…</div>
+                <div class="meta"><span class="appicon"></span><span>Safari</span> · <span>11 min ago</span> · <span>Text</span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⏎</div>
+            </div>
+            <div class="item">
+              <div class="type"></div>
+              <div>
+                <div style="font-weight:650;">Image 1200×800 (png)</div>
+                <div class="meta"><span class="appicon"></span><span>WeChat</span> · <span>1 h ago</span> · <span>Image</span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⏎</div>
+            </div>
+            <div class="item">
+              <div class="type"></div>
+              <div>
+                <div style="font-weight:650;">ssh home-server "tail -f"…</div>
+                <div class="meta"><span class="appicon"></span><span>Terminal</span> · <span>Yesterday</span> · <span>Text</span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⌘C</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div>↑↓ select · ⌘↵ paste · ⌘C copy</div>
+          <div>200 items</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label">Layout 2 — Preview BOTTOM (list on top)</div>
+      <div class="panel" style="width:680px;">
+        <div class="drag"></div>
+
+        <div class="searchRow">
+          <div class="search" style="border-radius:14px; padding:11px 12px;">
+            <div class="icon">🔍</div>
+            <div class="q">Search…</div>
+          </div>
+          <div class="pill">All</div>
+          <div class="pill">Text</div>
+          <div class="pill">Images</div>
+        </div>
+
+        <div class="bodyBL">
+          <div class="list full">
+            <div class="item selected" style="grid-template-columns: 22px 1fr auto;">
+              <div class="type"></div>
+              <div>
+                <div style="display:flex; justify-content:space-between; gap:12px;">
+                  <div style="font-weight:650;">Fix hot reload bug in settings…</div>
+                  <div style="color:var(--text1); font-size:12px;">2 min ago</div>
+                </div>
+                <div class="meta"><span class="appicon"></span><span>Raycast</span> · <span>Text</span><span class="pinDot"></span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⏎</div>
+            </div>
+            <div class="item" style="grid-template-columns: 22px 1fr auto;">
+              <div class="type"></div>
+              <div>
+                <div style="display:flex; justify-content:space-between; gap:12px;">
+                  <div style="font-weight:650;">https://docs.openclaw.ai/…</div>
+                  <div style="color:var(--text1); font-size:12px;">11 min ago</div>
+                </div>
+                <div class="meta"><span class="appicon"></span><span>Safari</span> · <span>Text</span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⌘C</div>
+            </div>
+            <div class="item" style="grid-template-columns: 22px 1fr auto;">
+              <div class="type"></div>
+              <div>
+                <div style="display:flex; justify-content:space-between; gap:12px;">
+                  <div style="font-weight:650;">Image 1200×800 (png)</div>
+                  <div style="color:var(--text1); font-size:12px;">1 h ago</div>
+                </div>
+                <div class="meta"><span class="appicon"></span><span>WeChat</span> · <span>Image</span></div>
+              </div>
+              <div style="color:var(--text1); font-size:12px;">⏎</div>
+            </div>
+          </div>
+
+          <div class="previewBottom">
+            <div class="previewCard" style="min-height: 160px;">
+              <div class="previewHeader">
+                <div>
+                  <div class="previewTitle">Preview</div>
+                  <div class="hint"><span class="appicon"></span> Raycast · 2 min ago <span class="pinDot"></span></div>
+                </div>
+                <div class="pill">Pinned</div>
+              </div>
+              <div class="previewBody" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco; opacity:.92;">
+                Update shared data dir should prompt restart…\n\nAlso keep scroll position when reopening panel.
+              </div>
+              <div class="actions">
+                <button class="btn">Copy</button>
+                <button class="btn primary">Paste</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div>Popover · draggable · frosted glass</div>
+          <div>⌘↵ Paste</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
