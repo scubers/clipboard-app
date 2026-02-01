@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct PreviewCardView: View {
-    @ObservedObject var vm: ClipboardViewModel
+    @ObservedObject var vm: MainPanelViewModel
     let wrap: Bool
     let monospace: Bool
 

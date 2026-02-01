@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var vm = ClipboardViewModel()
-    @StateObject private var appState = SharedAppState.shared
+    @StateObject private var vm = MainPanelViewModel()
+    @StateObject private var appState = AppStore.shared
 
     @FocusState private var focus: FocusTarget?
 

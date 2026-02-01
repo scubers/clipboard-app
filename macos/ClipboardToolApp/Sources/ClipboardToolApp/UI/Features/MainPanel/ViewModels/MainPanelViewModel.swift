@@ -3,7 +3,7 @@ import Combine
 import Foundation
 
 @MainActor
-final class ClipboardViewModel: ObservableObject {
+final class MainPanelViewModel: ObservableObject {
     @Published private(set) var items: [Item] = []
     @Published var filter: ItemFilter = .all {
         didSet {
@@ -22,23 +22,9 @@ final class ClipboardViewModel: ObservableObject {
     @Published var previewImage: NSImage?
     @Published var error: String?
 
-// Preview settings moved to SharedAppState
-
-    // Settings (persisted via UserDefaults)
-    @Published var pollIntervalMs: Double = SharedAppState.shared.pollIntervalMs {
-        didSet {
-            SharedAppState.shared.pollIntervalMs = pollIntervalMs
-            SharedAppState.shared.applyPollInterval()
-        }
-    }
-    @Published var monitoringEnabled: Bool = SharedAppState.shared.monitoringEnabled {
-        didSet {
-            SharedAppState.shared.monitoringEnabled = monitoringEnabled
-        }
-    }
-
-    private let core = SharedAppState.shared.core
-    private var monitor: PasteboardMonitor { SharedAppState.shared.monitor }
+    private let store = AppStore.shared
+    private var core: CoreClient { store.core }
+    private var monitor: PasteboardMonitor { store.monitor }
 
     private enum Keys {
         static let selectedID = "ClipboardTool.selectedID"
@@ -46,7 +32,7 @@ final class ClipboardViewModel: ObservableObject {
     }
 
     init() {
-        // Preview settings now live in SharedAppState.
+        // UI-only preferences are managed by AppStore; this VM handles list/search behavior.
 
         let savedFilter = UserDefaults.standard.integer(forKey: Keys.filter)
         if let f = ItemFilter(rawValue: savedFilter) {
@@ -69,9 +55,9 @@ final class ClipboardViewModel: ObservableObject {
 
     func bootstrap() {
         do {
-            // Core is opened by SharedAppState on app start; but if something failed,
+            // Core is opened by AppStore on app start; but if something failed,
             // try again using the current shared data dir.
-            try core.open(dataDir: SharedAppState.shared.sharedDataDir)
+            try core.open(dataDir: store.sharedDataDir)
             refresh()
         } catch {
             self.error = String(describing: error)
@@ -94,7 +80,7 @@ final class ClipboardViewModel: ObservableObject {
                 applyFilterAndSelection()
 
                 // 2) On-demand OCR (queue): keep draining backlog serially with low intensity.
-                SharedAppState.shared.ocrQueue.kick(core: core)
+                store.ocrQueue.kick(core: core)
             } catch {
                 self.error = String(describing: error)
             }
@@ -149,11 +135,7 @@ final class ClipboardViewModel: ObservableObject {
         }
     }
 
-    func applyPollInterval() {
-        SharedAppState.shared.pollIntervalMs = pollIntervalMs
-        SharedAppState.shared.applyPollInterval()
-        pollIntervalMs = SharedAppState.shared.pollIntervalMs
-    }
+    // pollIntervalMs is managed by AppStore.
 
     func loadPreview() {
         guard let id = selectedID else {
@@ -291,8 +273,5 @@ final class ClipboardViewModel: ObservableObject {
         pb.writeObjects([item])
     }
 
-    // Back-compat: some UI surfaces reference this. Prefer SharedAppState.shared.sharedDataDir.
-    static var defaultDataDir: String {
-        AppPaths.effectiveSharedDir().path
-    }
+    // (no-op)
 }

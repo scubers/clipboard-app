@@ -1,49 +1,19 @@
 import AppKit
 import SwiftUI
 
-enum SettingsPage: String, CaseIterable, Identifiable {
-    case general = "General"
-    case appearance = "Appearance"
-    case preview = "Preview"
-    case storage = "Storage"
-    case shortcuts = "Shortcuts"
-    case capture = "Capture"
-    case advanced = "Advanced"
-
-    var id: String { rawValue }
-
-    var icon: String {
-        switch self {
-        case .general: return "gearshape"
-        case .appearance: return "paintbrush"
-        case .preview: return "eye"
-        case .storage: return "folder"
-        case .shortcuts: return "keyboard"
-        case .capture: return "tray.and.arrow.down"
-        case .advanced: return "wrench.and.screwdriver"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .general: return "Common app behavior and startup."
-        case .appearance: return "Readability and visual tuning."
-        case .preview: return "Text rendering options for preview pane."
-        case .storage: return "Where the app stores shared data."
-        case .shortcuts: return "Keyboard shortcuts and hotkeys."
-        case .capture: return "Control what gets captured and retained."
-        case .advanced: return "Maintenance and data tools."
-        }
-    }
-}
-
+/// Captures a single hotkey chord from local keyDown events.
+///
+/// Lives in Services because it deals with NSEvent and is reused by Settings UI.
 @MainActor
 final class HotkeyCapture: ObservableObject {
     @Published var status: String = "Press keys now"
 
     private var monitor: Any?
 
-    func start(onCaptured: @escaping (_ keyCode: UInt32, _ carbonModifiers: UInt32, _ display: String) -> Void, onCancel: @escaping () -> Void) {
+    func start(
+        onCaptured: @escaping (_ keyCode: UInt32, _ carbonModifiers: UInt32, _ display: String) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
         stop()
 
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { [weak self] event in

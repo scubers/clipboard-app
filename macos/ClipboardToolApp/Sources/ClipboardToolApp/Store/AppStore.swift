@@ -1,10 +1,9 @@
 import Foundation
 
-// A very small shared container so SettingsView can talk to the same CoreClient
-// as the main content window.
+// AppStore is the app-level state container / dependency hub.
 @MainActor
-final class SharedAppState: ObservableObject {
-    static let shared = SharedAppState()
+final class AppStore: ObservableObject {
+    static let shared = AppStore()
 
     let core = CoreClient()
     let monitor = PasteboardMonitor(interval: 0.5)

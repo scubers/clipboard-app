@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var appState = SharedAppState.shared
+    @StateObject private var appState = AppStore.shared
     @StateObject private var hk = HotkeyManager.shared
 
     @State private var selection: SettingsPage = .general

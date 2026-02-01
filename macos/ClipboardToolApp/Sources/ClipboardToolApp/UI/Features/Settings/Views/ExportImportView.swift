@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct ExportImportView: View {
-    @StateObject private var state = SharedAppState.shared
+    @StateObject private var state = AppStore.shared
     @State private var error: String?
 
     var body: some View {

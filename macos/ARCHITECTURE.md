@@ -151,6 +151,25 @@ macOS settings file should be **pretty printed** and **sorted keys**.
 
 ---
 
+## Xcode project maintenance (required)
+
+We maintain `macos/Xcode/ClipboardTool.xcodeproj` using **XcodeGen**.
+
+- Source of truth: `macos/Xcode/project.yml`
+- Generator script: `scripts/gen_xcodeproj.sh` (requires `xcodegen`)
+
+Rules:
+- Do **not** hand-edit `project.pbxproj` unless absolutely necessary.
+- After moving/adding Swift files, re-generate the project:
+
+```bash
+./scripts/gen_xcodeproj.sh
+```
+
+- Commit the regenerated `.xcodeproj` along with the code changes.
+
+---
+
 ## Add-a-feature checklist
 1. Create `UI/Features/<Feature>/Views` and `UI/Features/<Feature>/ViewModels`.
 2. If you need shared logic, put it in `Domain/` / `Services/` / `Data/` instead of importing other features.
@@ -158,4 +177,4 @@ macOS settings file should be **pretty printed** and **sorted keys**.
    - if syncable macOS-only → `macos.json` via `MacOSConfigStore`
    - if core/cross-platform → add to Go core settings + expose API
    - if device-only → UserDefaults
-4. Ensure build still works with SwiftPM and CI release workflow.
+4. Ensure build still works with SwiftPM, Xcode project (XcodeGen), and CI release workflow.
