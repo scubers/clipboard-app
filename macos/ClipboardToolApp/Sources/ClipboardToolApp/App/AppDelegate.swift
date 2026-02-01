@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let previousApp {
-            previousApp.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            previousApp.activate(options: [.activateAllWindows])
         }
 
         let delay: TimeInterval = (kind == "image") ? 0.28 : 0.10

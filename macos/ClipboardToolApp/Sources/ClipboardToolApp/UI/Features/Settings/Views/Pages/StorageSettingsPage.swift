@@ -28,8 +28,6 @@ struct StorageSettingsPage: View {
                     HStack(spacing: 10) {
                         Button("Restart Now") { AppRelauncher.restart() }
                             .buttonStyle(.borderedProminent)
-                        Button("Not Now") { /* no-op */ }
-                            .buttonStyle(.bordered)
                     }
                 }
                 Text("Changing the shared directory requires restarting the app to ensure all components use the new location.")

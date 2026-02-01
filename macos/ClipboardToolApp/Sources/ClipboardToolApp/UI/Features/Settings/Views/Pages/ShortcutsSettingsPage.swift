@@ -55,20 +55,6 @@ struct ShortcutsSettingsPage: View {
                 }
             }
 
-            SettingsCard(title: "Behavior") {
-                SettingsRow(title: "Enter key") {
-                    Text("Paste")
-                        .font(.system(size: 12, weight: .semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.primary.opacity(0.08)))
-                        .overlay(Capsule().stroke(Color.primary.opacity(0.10), lineWidth: 1))
-                        .foregroundStyle(.secondary)
-                }
-                Text("Press Enter to paste the selected item into the previous app.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-            }
         }
         .onAppear {
             if !hk.enabled {

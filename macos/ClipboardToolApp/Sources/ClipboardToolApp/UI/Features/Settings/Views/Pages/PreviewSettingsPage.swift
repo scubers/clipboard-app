@@ -16,17 +16,6 @@ struct PreviewSettingsPage: View {
                 }
             }
 
-            SettingsCard(title: "Images") {
-                SettingsRow(title: "Fit mode") {
-                    Text("Scale to fit")
-                        .font(.system(size: 12, weight: .semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.primary.opacity(0.08)))
-                        .overlay(Capsule().stroke(Color.primary.opacity(0.10), lineWidth: 1))
-                        .foregroundStyle(.secondary)
-                }
-            }
         }
     }
 }
