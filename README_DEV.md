@@ -6,17 +6,18 @@
 
 ## Development rule (mandatory)
 **After every change, verify builds are green** (don’t leave the repo in a broken build state):
-- Core + smoke test:
+- Core + ABI/link smoke test:
   ```bash
-  ./scripts/build_all.sh
+  ./scripts/build_macos_smoketest.sh
   ```
-- SwiftPM macOS app:
-  ```bash
-  ./scripts/build_macos_app_spm.sh
-  ```
-- Xcode project (generated via XcodeGen):
+- Xcode project build (generated via XcodeGen):
   ```bash
   ./scripts/build_macos_xcode.sh
+  ```
+- Local runnable .app bundle (quick manual verification):
+  ```bash
+  ./scripts/build_macos_app_bundle.sh
+  open -n dist/ClipboardTool.app
   ```
 
 ## UI / UX notes
