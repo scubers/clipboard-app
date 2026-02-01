@@ -26,6 +26,9 @@ This file tracks deferred work and known improvements (due to prioritization or 
 - [x] Better preview UI for long text (wrap toggle, monospace toggle).
 - [ ] Preview extras: search-within-preview, jump-to-top/bottom, copy-without-format.
 
+## UI Behavior (Popover / Focus)
+- [ ] Raycast-like focus behavior: when activating the panel over another app (e.g., WeChat input), allow typing into our search while the underlying app still *appears* focused (caret still blinking / traffic lights still colored). Investigate feasibility (likely via key-window activation tradeoffs vs CGEventTap-based input capture). **Deferred for now; keep current behavior.**
+
 ## Sync (V2+)
 - [ ] Multi-device sync protocol (p2p or relay).
 - [ ] Privacy Mode semantics for sync/capture.
