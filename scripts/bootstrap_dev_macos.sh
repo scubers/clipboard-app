@@ -12,6 +12,23 @@ cd "$ROOT_DIR"
 
 echo "[bootstrap] repo: $ROOT_DIR"
 
+SKIP_XCODEBUILD=0
+for arg in "$@"; do
+  case "$arg" in
+    --skip-xcodebuild) SKIP_XCODEBUILD=1 ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: scripts/bootstrap_dev_macos.sh [--skip-xcodebuild]
+
+Options:
+  --skip-xcodebuild   Skip the Xcode project build step (xcodebuild ... build)
+  -h, --help          Show this help
+EOF
+      exit 0
+      ;;
+  esac
+done
+
 need_cmd() {
   command -v "$1" >/dev/null 2>&1 || return 1
 }
@@ -80,14 +97,19 @@ section "Building Go core dylib"
 section "SwiftPM build (debug)"
 ( cd macos/ClipboardToolApp && swift build )
 
-section "Xcode build (Debug)"
-# xcodegen writes to macos/Xcode/ClipboardTool.xcodeproj
-xcodebuild \
-  -project macos/Xcode/ClipboardTool.xcodeproj \
-  -scheme ClipboardTool \
-  -configuration Debug \
-  -sdk macosx \
-  build
+if [[ "$SKIP_XCODEBUILD" == "1" ]]; then
+  echo
+  echo "==> Skipping Xcode build (Debug) (--skip-xcodebuild)"
+else
+  section "Xcode build (Debug)"
+  # xcodegen writes to macos/Xcode/ClipboardTool.xcodeproj
+  xcodebuild \
+    -project macos/Xcode/ClipboardTool.xcodeproj \
+    -scheme ClipboardTool \
+    -configuration Debug \
+    -sdk macosx \
+    build
+fi
 
 echo
 echo "[bootstrap] done"
