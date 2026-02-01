@@ -34,6 +34,7 @@ type itemRow struct {
 	Summary        string  `json:"summary"`
 	SourceApp      *string `json:"sourceApp"`
 	Pinned         bool    `json:"pinned"`
+	OCRMatched     bool    `json:"ocrMatched,omitempty"`
 }
 
 func canonicalizeText(s string) string {
@@ -333,6 +334,98 @@ func ct_items_touch_last_copied(corePtr *C.void, id *C.char, copiedAtMs C.longlo
 		return ctErrNotFound
 	}
 	return ctOK
+}
+
+//export ct_items_set_ocr_text
+func ct_items_set_ocr_text(corePtr *C.void, id *C.char, ocrText *C.char, status C.int, updatedAtMs C.longlong) C.int {
+	if corePtr == nil || id == nil {
+		setErr("invalid arg")
+		return ctErrInvalidArg
+	}
+
+	c, ok := getCore(corePtr)
+	if !ok {
+		setErr("invalid core handle")
+		return ctErrInvalidArg
+	}
+	db, err := getDB(c)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrDB
+	}
+
+	st := int(status)
+	if st < 0 || st > 2 {
+		st = 0
+	}
+
+	ms := int64(updatedAtMs)
+	if ms <= 0 {
+		ms = time.Now().UnixMilli()
+	}
+
+	text := ""
+	if ocrText != nil && st == 1 {
+		text = C.GoString(ocrText)
+		// Truncate to 16k characters.
+		r := []rune(text)
+		if len(r) > 16384 {
+			text = string(r[:16384])
+		}
+	}
+
+	res, err := db.Exec(`UPDATE items SET ocr_text=?, ocr_status=?, ocr_updated_at_ms=? WHERE id=?`, text, st, ms, C.GoString(id))
+	if err != nil {
+		setErr("set_ocr_text: " + err.Error())
+		return ctErrDB
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return ctErrNotFound
+	}
+	return ctOK
+}
+
+//export ct_items_list_images_needing_ocr_json
+func ct_items_list_images_needing_ocr_json(corePtr *C.void, limit C.int, outJSON **C.char) C.int {
+	if corePtr == nil || outJSON == nil {
+		setErr("invalid arg")
+		return ctErrInvalidArg
+	}
+	*outJSON = nil
+
+	c, ok := getCore(corePtr)
+	if !ok {
+		setErr("invalid core handle")
+		return ctErrInvalidArg
+	}
+	db, err := getDB(c)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrDB
+	}
+
+	l := int(limit)
+	if l <= 0 {
+		l = 5
+	}
+	if l > 50 {
+		l = 50
+	}
+
+	rows, err := db.Query(`SELECT id, created_at_ms, last_copied_at_ms, type, summary, source_app, pinned, 0 AS ocrMatched
+		FROM items
+		WHERE deleted_at_ms IS NULL
+		AND type='image'
+		AND (ocr_status IS NULL OR ocr_status=0)
+		ORDER BY pinned DESC, last_copied_at_ms DESC, created_at_ms DESC
+		LIMIT ?`, l)
+	if err != nil {
+		setErr("list_images_needing_ocr: " + err.Error())
+		return ctErrDB
+	}
+	defer rows.Close()
+	return scanItemsToJSON(rows, l, outJSON)
 }
 
 //export ct_items_get_blob_path

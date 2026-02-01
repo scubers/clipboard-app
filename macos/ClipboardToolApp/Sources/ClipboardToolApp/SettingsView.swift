@@ -576,6 +576,7 @@ struct SettingsView: View {
             if alert.runModal() == .alertFirstButtonReturn {
                 do {
                     try appState.core.importFromDir(url.path, keepBackup: true)
+                    appState.notifyDataSourceChanged()
                 } catch {
                     self.error = String(describing: error)
                 }
@@ -593,6 +594,7 @@ struct SettingsView: View {
             Task { @MainActor in
                 do {
                     try appState.core.removeHistory(keepPinned: keepPinned)
+                    appState.notifyDataSourceChanged()
                 } catch {
                     self.error = String(describing: error)
                 }
@@ -623,7 +625,6 @@ private struct SettingsSidebarRow: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
             .padding(.horizontal, 10)
             .padding(.vertical, 9)
             .background(
@@ -634,8 +635,11 @@ private struct SettingsSidebarRow: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.accentColor.opacity(selected ? 0.22 : 0.0), lineWidth: 1)
             )
+            // Make the whole visible row clickable (including blank space).
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(selected ? .primary : .secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

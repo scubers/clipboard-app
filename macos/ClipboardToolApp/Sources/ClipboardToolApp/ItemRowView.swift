@@ -79,6 +79,16 @@ struct ItemRowView: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
 
+                    if item.type == "image", item.ocrMatched == true {
+                        Text("OCR")
+                            .font(.system(size: 11, weight: .semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.accentColor.opacity(0.18)))
+                            .overlay(Capsule().stroke(Color.accentColor.opacity(0.22), lineWidth: 1))
+                            .foregroundStyle(.secondary)
+                    }
+
                     Text("·")
                         .foregroundStyle(.tertiary)
 

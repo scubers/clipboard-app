@@ -8,6 +8,7 @@ final class SharedAppState: ObservableObject {
 
     let core = CoreClient()
     let monitor = PasteboardMonitor(interval: 0.5)
+    let ocrQueue = OCRQueueManager()
 
     @Published private(set) var sharedDataDir: String = AppPaths.effectiveSharedDir().path
 
@@ -110,7 +111,15 @@ final class SharedAppState: ObservableObject {
         sharedDataDir = url.path
 
         // Tell UI to refresh.
-        NotificationCenter.default.post(name: .clipboardToolStorageChanged, object: nil)
+        notifyDataSourceChanged(storageChanged: true)
+    }
+
+    func notifyDataSourceChanged(storageChanged: Bool = false) {
+        // Data dir or DB contents changed: stop any background OCR work and refresh UI.
+        ocrQueue.reset()
+        if storageChanged {
+            NotificationCenter.default.post(name: .clipboardToolStorageChanged, object: nil)
+        }
         NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
     }
 

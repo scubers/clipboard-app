@@ -11,6 +11,8 @@ struct PillButton: View {
                 .font(.system(size: 12, weight: .semibold))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
+                // Make the whole visual capsule area clickable, not just the text.
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .background(

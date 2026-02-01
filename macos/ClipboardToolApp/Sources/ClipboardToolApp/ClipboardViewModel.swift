@@ -79,16 +79,25 @@ final class ClipboardViewModel: ObservableObject {
     }
 
     func refresh() {
-        do {
-            error = nil
-            if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                items = try core.list()
-            } else {
-                items = try core.search(query)
+        Task { @MainActor in
+            do {
+                error = nil
+                let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+                if q.isEmpty {
+                    items = try core.list()
+                    applyFilterAndSelection()
+                    return
+                }
+
+                // 1) Initial search (may include OCR hits already).
+                items = try core.search(q)
+                applyFilterAndSelection()
+
+                // 2) On-demand OCR (queue): keep draining backlog serially with low intensity.
+                SharedAppState.shared.ocrQueue.kick(core: core)
+            } catch {
+                self.error = String(describing: error)
             }
-            applyFilterAndSelection()
-        } catch {
-            self.error = String(describing: error)
         }
     }
 

@@ -59,5 +59,6 @@ struct ExportImportView: View {
 
     private func importFrom(url: URL) throws {
         try state.core.importFromDir(url.path, keepBackup: true)
+        state.notifyDataSourceChanged()
     }
 }

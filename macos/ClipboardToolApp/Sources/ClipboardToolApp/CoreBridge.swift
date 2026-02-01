@@ -36,6 +36,12 @@ func ct_items_get_blob_path(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointe
 @_silgen_name("ct_items_touch_last_copied")
 func ct_items_touch_last_copied(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ copiedAtMs: Int64) -> Int32
 
+@_silgen_name("ct_items_set_ocr_text")
+func ct_items_set_ocr_text(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ ocrText: UnsafePointer<CChar>?, _ status: Int32, _ updatedAtMs: Int64) -> Int32
+
+@_silgen_name("ct_items_list_images_needing_ocr_json")
+func ct_items_list_images_needing_ocr_json(_ core: UnsafeMutableRawPointer?, _ limit: Int32, _ outJSON: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+
 @_silgen_name("ct_items_set_pinned")
 func ct_items_set_pinned(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ pinned: Int32) -> Int32
 
@@ -233,6 +239,31 @@ final class CoreClient {
         }
     }
 
+    func setOCRText(id: String, text: String, status: Int32) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let rc = id.withCString { cid in
+            text.withCString { ctext in
+                ct_items_set_ocr_text(core, cid, status == 1 ? ctext : nil, status, nowMs)
+            }
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
+    func listImagesNeedingOCR(limit: Int32 = 6) throws -> [Item] {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = ct_items_list_images_needing_ocr_json(core, limit, &out)
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+        defer { if let out { ct_free(out) } }
+        let json = String(cString: out!)
+        return try JSONDecoder().decode([Item].self, from: Data(json.utf8))
+    }
+
     func getPrivacyMode() throws -> Bool {
         guard let core else { throw CoreError.rc(-1, "core not opened") }
         var enabled: Int32 = 0
@@ -359,6 +390,7 @@ struct Item: Codable, Identifiable {
     let summary: String
     let sourceApp: String?
     let pinned: Bool
+    let ocrMatched: Bool?
 }
 
 struct Stats: Codable {

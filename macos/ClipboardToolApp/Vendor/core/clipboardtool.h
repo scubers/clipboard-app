@@ -163,6 +163,8 @@ extern int ct_db_integrity_check_json(void* corePtr, char** outJSON);
 extern int ct_items_add_text(void* corePtr, char* textUTF8, char* sourceApp, long long createdAtMs, char** outID);
 extern int ct_items_add_image(void* corePtr, char* mimeC, void* dataPtr, int dataLen, char* sourceApp, long long createdAtMs, char** outID);
 extern int ct_items_touch_last_copied(void* corePtr, char* id, long long copiedAtMs);
+extern int ct_items_set_ocr_text(void* corePtr, char* id, char* ocrText, int status, long long updatedAtMs);
+extern int ct_items_list_images_needing_ocr_json(void* corePtr, int limit, char** outJSON);
 extern int ct_items_get_blob_path(void* corePtr, char* id, char** outPath);
 extern int ct_items_list_json(void* corePtr, int limit, int offset, int includeDeleted, char** outJSON);
 extern int ct_items_get_text(void* corePtr, char* id, char** outText);

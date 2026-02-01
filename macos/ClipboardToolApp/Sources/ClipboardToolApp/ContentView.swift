@@ -84,25 +84,41 @@ struct ContentView: View {
                 }
 
                 // Body
-                Group {
-                    switch appState.previewLayout {
-                    case .previewRight:
-                        HStack(spacing: 12) {
-                            listPane
-                            previewPane
-                                .frame(width: 300)
-                        }
-                    case .previewLeft:
-                        HStack(spacing: 12) {
-                            previewPane
-                                .frame(width: 300)
-                            listPane
-                        }
-                    case .previewBottom:
-                        VStack(spacing: 12) {
-                            listPane
-                            previewPane
-                                .frame(height: 190)
+                GeometryReader { geo in
+                    let spacing: CGFloat = 12
+                    let w = geo.size.width
+                    let h = geo.size.height
+
+                    // 60/40 split (list/preview)
+                    let listW = max(240, (w - spacing) * 0.50)
+                    let previewW = max(240, (w - spacing) * 0.50)
+
+                    let listH = max(160, (h - spacing) * 0.50)
+                    let previewH = max(160, (h - spacing) * 0.50)
+
+                    Group {
+                        switch appState.previewLayout {
+                        case .previewRight:
+                            HStack(spacing: spacing) {
+                                listPane
+                                    .frame(width: listW)
+                                previewPane
+                                    .frame(width: previewW)
+                            }
+                        case .previewLeft:
+                            HStack(spacing: spacing) {
+                                previewPane
+                                    .frame(width: previewW)
+                                listPane
+                                    .frame(width: listW)
+                            }
+                        case .previewBottom:
+                            VStack(spacing: spacing) {
+                                listPane
+                                    .frame(height: listH)
+                                previewPane
+                                    .frame(height: previewH)
+                            }
                         }
                     }
                 }
@@ -160,9 +176,26 @@ struct ContentView: View {
                         ItemRowView(item: item, selected: vm.selectedID == item.id)
                             .id(item.id)
                             .contentShape(Rectangle())
+                            // Single click should respond immediately.
+                            // We implement double-click detection ourselves to avoid SwiftUI's
+                            // single-tap delay when also using onTapGesture(count: 2).
                             .onTapGesture {
+                                let now = Date()
                                 vm.selectedID = item.id
                                 focus = .list
+
+                                if let lastID = lastClickID,
+                                   let lastAt = lastClickAt,
+                                   lastID == item.id,
+                                   now.timeIntervalSince(lastAt) < 0.32 {
+                                    // Treat as double click.
+                                    lastClickID = nil
+                                    lastClickAt = nil
+                                    vm.pasteSelectedToPreviousApp()
+                                } else {
+                                    lastClickID = item.id
+                                    lastClickAt = now
+                                }
                             }
                             .onAppear { visibleIDs.insert(item.id) }
                             .onDisappear { visibleIDs.remove(item.id) }
@@ -221,6 +254,10 @@ struct ContentView: View {
 
     @State private var visibleIDs: Set<String> = []
     @State private var lastSelectedID: String?
+
+    // For manual double-click detection (to keep single-click instantaneous).
+    @State private var lastClickID: String?
+    @State private var lastClickAt: Date?
 
     private var previewPane: some View {
         PreviewCardView(vm: vm, wrap: appState.previewWrap, monospace: appState.previewMonospace)

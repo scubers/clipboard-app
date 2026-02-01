@@ -16,7 +16,8 @@ func scanItemsToJSON(rows *sql.Rows, capHint int, outJSON **C.char) C.int {
 		var r itemRow
 		var source sql.NullString
 		var pinned int
-		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.LastCopiedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
+		var ocrMatchedInt sql.NullInt64
+		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.LastCopiedAtMs, &r.Type, &r.Summary, &source, &pinned, &ocrMatchedInt); err != nil {
 			setErr("scan: " + err.Error())
 			return ctErrDB
 		}
@@ -25,6 +26,9 @@ func scanItemsToJSON(rows *sql.Rows, capHint int, outJSON **C.char) C.int {
 			r.SourceApp = &s
 		}
 		r.Pinned = pinned != 0
+		if ocrMatchedInt.Valid {
+			r.OCRMatched = ocrMatchedInt.Int64 != 0
+		}
 		out = append(out, r)
 	}
 	if err := rows.Err(); err != nil {
