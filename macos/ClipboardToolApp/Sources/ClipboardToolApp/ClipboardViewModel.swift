@@ -22,13 +22,7 @@ final class ClipboardViewModel: ObservableObject {
     @Published var previewImage: NSImage?
     @Published var error: String?
 
-    // Preview settings (persisted via UserDefaults)
-    @Published var previewWrap: Bool = true {
-        didSet { UserDefaults.standard.set(previewWrap, forKey: Keys.previewWrap) }
-    }
-    @Published var previewMonospace: Bool = true {
-        didSet { UserDefaults.standard.set(previewMonospace, forKey: Keys.previewMonospace) }
-    }
+// Preview settings moved to SharedAppState
 
     // Settings (persisted via UserDefaults)
     @Published var pollIntervalMs: Double = SharedAppState.shared.pollIntervalMs {
@@ -47,19 +41,12 @@ final class ClipboardViewModel: ObservableObject {
     private var monitor: PasteboardMonitor { SharedAppState.shared.monitor }
 
     private enum Keys {
-        static let previewWrap = "ClipboardTool.previewWrap"
-        static let previewMonospace = "ClipboardTool.previewMonospace"
         static let selectedID = "ClipboardTool.selectedID"
         static let filter = "ClipboardTool.filter"
     }
 
     init() {
-        if UserDefaults.standard.object(forKey: Keys.previewWrap) != nil {
-            previewWrap = UserDefaults.standard.bool(forKey: Keys.previewWrap)
-        }
-        if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
-            previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
-        }
+        // Preview settings now live in SharedAppState.
 
         let savedFilter = UserDefaults.standard.integer(forKey: Keys.filter)
         if let f = ItemFilter(rawValue: savedFilter) {
@@ -105,6 +92,26 @@ final class ClipboardViewModel: ObservableObject {
         }
     }
 
+    func selectPrev() {
+        guard !filteredItems.isEmpty else { return }
+        guard let sel = selectedID, let idx = filteredItems.firstIndex(where: { $0.id == sel }) else {
+            selectedID = filteredItems.first?.id
+            return
+        }
+        let ni = max(0, idx - 1)
+        selectedID = filteredItems[ni].id
+    }
+
+    func selectNext() {
+        guard !filteredItems.isEmpty else { return }
+        guard let sel = selectedID, let idx = filteredItems.firstIndex(where: { $0.id == sel }) else {
+            selectedID = filteredItems.first?.id
+            return
+        }
+        let ni = min(filteredItems.count - 1, idx + 1)
+        selectedID = filteredItems[ni].id
+    }
+
     private func applyFilterAndSelection() {
         switch filter {
         case .all:
@@ -116,6 +123,12 @@ final class ClipboardViewModel: ObservableObject {
         }
 
         // Keep selection stable if possible.
+        if filteredItems.isEmpty {
+            selectedID = nil
+            UserDefaults.standard.removeObject(forKey: Keys.selectedID)
+            return
+        }
+
         if let sel = selectedID, filteredItems.contains(where: { $0.id == sel }) {
             // ok
         } else {
@@ -163,6 +176,9 @@ final class ClipboardViewModel: ObservableObject {
             // Avoid feedback loop: our own copy action changes pasteboard.
             monitor.suppress(for: max(0.6, monitor.interval * 2))
 
+            // Treat copy as "entering system clipboard" for ordering.
+            try core.touchLastCopied(id: id)
+
             let pb = NSPasteboard.general
             pb.clearContents()
 
@@ -174,6 +190,9 @@ final class ClipboardViewModel: ObservableObject {
 
             let text = try core.getText(id: id)
             pb.setString(text, forType: .string)
+
+            // Refresh ordering immediately.
+            NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
         } catch {
             self.error = String(describing: error)
         }
@@ -184,6 +203,9 @@ final class ClipboardViewModel: ObservableObject {
         do {
             // Avoid feedback loop: our own copy action changes pasteboard.
             monitor.suppress(for: max(0.6, monitor.interval * 2))
+
+            // Treat paste as "entering system clipboard" for ordering.
+            try core.touchLastCopied(id: id)
 
             // Copy selected item to system clipboard.
             let pb = NSPasteboard.general
@@ -197,6 +219,7 @@ final class ClipboardViewModel: ObservableObject {
                     object: nil,
                     userInfo: [ClipboardToolNotificationKeys.kind: "image"]
                 )
+                NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
                 return
             }
 
@@ -211,6 +234,7 @@ final class ClipboardViewModel: ObservableObject {
                     ClipboardToolNotificationKeys.text: text,
                 ]
             )
+            NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
         } catch {
             self.error = String(describing: error)
         }

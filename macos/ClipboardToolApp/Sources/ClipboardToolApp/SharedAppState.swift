@@ -16,6 +16,21 @@ final class SharedAppState: ObservableObject {
         didSet { UserDefaults.standard.set(previewLayout.rawValue, forKey: Keys.previewLayout) }
     }
 
+    // UI appearance tuning (simple)
+    // 0.02 = most transparent (least tint), 0.35 = strongest tint for readability.
+    // Per your request: default to max (better readability on bright backgrounds).
+    @Published var backgroundTint: Double = 0.35 {
+        didSet { UserDefaults.standard.set(backgroundTint, forKey: Keys.backgroundTint) }
+    }
+
+    // Preview settings (persisted via UserDefaults)
+    @Published var previewWrap: Bool = true {
+        didSet { UserDefaults.standard.set(previewWrap, forKey: Keys.previewWrap) }
+    }
+    @Published var previewMonospace: Bool = true {
+        didSet { UserDefaults.standard.set(previewMonospace, forKey: Keys.previewMonospace) }
+    }
+
     // Settings (persisted via UserDefaults)
     @Published var pollIntervalMs: Double = 500 {
         didSet { UserDefaults.standard.set(pollIntervalMs, forKey: Keys.pollIntervalMs) }
@@ -28,6 +43,9 @@ final class SharedAppState: ObservableObject {
         static let pollIntervalMs = "ClipboardTool.pollIntervalMs"
         static let monitoringEnabled = "ClipboardTool.monitoringEnabled"
         static let previewLayout = "ClipboardTool.previewLayout"
+        static let backgroundTint = "ClipboardTool.backgroundTint"
+        static let previewWrap = "ClipboardTool.previewWrap"
+        static let previewMonospace = "ClipboardTool.previewMonospace"
     }
 
     private init() {
@@ -44,9 +62,21 @@ final class SharedAppState: ObservableObject {
             monitoringEnabled = UserDefaults.standard.bool(forKey: Keys.monitoringEnabled)
         }
 
+        if UserDefaults.standard.object(forKey: Keys.previewWrap) != nil {
+            previewWrap = UserDefaults.standard.bool(forKey: Keys.previewWrap)
+        }
+        if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
+            previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
+        }
+
         let savedLayout = UserDefaults.standard.integer(forKey: Keys.previewLayout)
         if let l = PreviewLayout(rawValue: savedLayout) {
             previewLayout = l
+        }
+
+        let savedTint = UserDefaults.standard.double(forKey: Keys.backgroundTint)
+        if savedTint > 0 {
+            backgroundTint = min(0.35, max(0.02, savedTint))
         }
 
         applyPollInterval()

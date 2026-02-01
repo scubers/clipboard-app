@@ -300,6 +300,41 @@ func ct_items_add_image(corePtr *C.void, mimeC *C.char, dataPtr unsafe.Pointer, 
 	return ctOK
 }
 
+//export ct_items_touch_last_copied
+func ct_items_touch_last_copied(corePtr *C.void, id *C.char, copiedAtMs C.longlong) C.int {
+	if corePtr == nil || id == nil {
+		setErr("invalid arg")
+		return ctErrInvalidArg
+	}
+
+	c, ok := getCore(corePtr)
+	if !ok {
+		setErr("invalid core handle")
+		return ctErrInvalidArg
+	}
+	db, err := getDB(c)
+	if err != nil {
+		setErr(err.Error())
+		return ctErrDB
+	}
+
+	ms := int64(copiedAtMs)
+	if ms <= 0 {
+		ms = time.Now().UnixMilli()
+	}
+
+	res, err := db.Exec(`UPDATE items SET last_copied_at_ms=?, deleted_at_ms=NULL WHERE id=?`, ms, C.GoString(id))
+	if err != nil {
+		setErr("touch_last_copied: " + err.Error())
+		return ctErrDB
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return ctErrNotFound
+	}
+	return ctOK
+}
+
 //export ct_items_get_blob_path
 func ct_items_get_blob_path(corePtr *C.void, id *C.char, outPath **C.char) C.int {
 	if corePtr == nil || id == nil || outPath == nil {

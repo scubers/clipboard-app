@@ -27,14 +27,21 @@ struct ContentView: View {
             VisualEffectMaterial(material: .hudWindow, blendingMode: .behindWindow, state: .active)
                 .ignoresSafeArea()
 
+            // Simple readability tint on top of the material.
+            Rectangle()
+                .fill(Color.black.opacity(appState.backgroundTint))
+                .ignoresSafeArea()
+
             VStack(spacing: 10) {
                 // Search row (no title bar in content)
                 HStack(spacing: 10) {
                     HStack(spacing: 10) {
-                        Image(systemName: "command")
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.secondary)
                         TextField("Search clipboard…", text: $vm.query)
                             .textFieldStyle(.plain)
+                            .font(.system(size: 15, weight: .semibold))
                             .focused($focus, equals: .search)
                             .onSubmit { vm.refresh() }
                             .onKeyPress(.downArrow) {
@@ -45,10 +52,10 @@ struct ContentView: View {
                                 return .handled
                             }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 9)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.10), lineWidth: 1))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(RoundedRectangle(cornerRadius: 14).fill(Color.primary.opacity(0.08)))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.10), lineWidth: 1))
 
                     HStack(spacing: 8) {
                         PillButton(title: "All", selected: vm.filter == .all) { vm.filter = .all }
@@ -110,10 +117,20 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
             focus = .search
-            // Restore last viewed item (and scroll to it) on each open.
-            if vm.selectedID == nil {
-                vm.selectedID = vm.filteredItems.first?.id
-            }
+            // Per spec: each activation jumps to top and selects first item.
+            vm.selectedID = vm.filteredItems.first?.id
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolSelectPrev)) { _ in
+            vm.selectPrev()
+            focus = .list
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolSelectNext)) { _ in
+            vm.selectNext()
+            focus = .list
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolPasteAction)) { _ in
+            // Default Enter behavior: paste.
+            vm.pasteSelectedToPreviousApp()
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolItemsChanged)) { _ in
             if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -125,6 +142,13 @@ struct ContentView: View {
         }
         .onChange(of: vm.selectedID) { _, _ in
             vm.loadPreview()
+        }
+    }
+
+    private struct RowFrameKey: PreferenceKey {
+        static var defaultValue: [String: CGRect] = [:]
+        static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+            value.merge(nextValue(), uniquingKeysWith: { $1 })
         }
     }
 
@@ -140,23 +164,54 @@ struct ContentView: View {
                                 vm.selectedID = item.id
                                 focus = .list
                             }
+                            .onAppear { visibleIDs.insert(item.id) }
+                            .onDisappear { visibleIDs.remove(item.id) }
                     }
                 }
                 .padding(2)
             }
+            .scrollIndicators(.automatic)
             .background(RoundedRectangle(cornerRadius: 14).fill(Color.primary.opacity(0.04)))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.08), lineWidth: 1))
-            .onChange(of: vm.selectedID) { _, newValue in
+            .onChange(of: vm.selectedID) { oldValue, newValue in
                 guard let id = newValue else { return }
-                withAnimation(.easeOut(duration: 0.12)) {
-                    proxy.scrollTo(id, anchor: .center)
+                // Only scroll when the selected row is not currently visible.
+                guard !visibleIDs.contains(id) else {
+                    lastSelectedID = id
+                    return
                 }
+
+                // Decide direction using old/new indices if possible.
+                let newIdx = vm.filteredItems.firstIndex(where: { $0.id == id })
+                let oldIdx = (oldValue != nil) ? vm.filteredItems.firstIndex(where: { $0.id == oldValue! }) : nil
+
+                let movingDown: Bool
+                if let n = newIdx, let o = oldIdx {
+                    movingDown = n > o
+                } else {
+                    // Fallback: compare against lastSelectedID
+                    if let last = lastSelectedID,
+                       let n = newIdx,
+                       let o = vm.filteredItems.firstIndex(where: { $0.id == last }) {
+                        movingDown = n > o
+                    } else {
+                        movingDown = true
+                    }
+                }
+
+                // Defer one tick so visibleIDs updates settle.
+                DispatchQueue.main.async {
+                    withAnimation(.easeOut(duration: 0.10)) {
+                        proxy.scrollTo(id, anchor: movingDown ? .bottom : .top)
+                    }
+                }
+                lastSelectedID = id
             }
             .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
-                // When reopening, restore to last selected item (our proxy for scroll position).
-                if let id = vm.selectedID {
+                // Per spec: jump to top on each activation.
+                if let first = vm.filteredItems.first?.id {
                     DispatchQueue.main.async {
-                        proxy.scrollTo(id, anchor: .center)
+                        proxy.scrollTo(first, anchor: .top)
                     }
                 }
             }
@@ -164,20 +219,11 @@ struct ContentView: View {
         .focused($focus, equals: .list)
     }
 
-    private var previewPane: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Toggle("Wrap", isOn: $vm.previewWrap)
-                    .toggleStyle(.switch)
-                Toggle("Mono", isOn: $vm.previewMonospace)
-                    .toggleStyle(.switch)
-                Spacer()
-            }
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
+    @State private var visibleIDs: Set<String> = []
+    @State private var lastSelectedID: String?
 
-            PreviewCardView(vm: vm)
-        }
+    private var previewPane: some View {
+        PreviewCardView(vm: vm, wrap: appState.previewWrap, monospace: appState.previewMonospace)
     }
 
     private var footer: some View {

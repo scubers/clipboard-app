@@ -74,6 +74,30 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Appearance") {
+                VStack(alignment: .leading) {
+                    Text("Background tint (readability)")
+                    Slider(value: Binding(
+                        get: { state.backgroundTint },
+                        set: { state.backgroundTint = $0 }
+                    ), in: 0.02...0.35)
+                    Text(String(format: "%.0f%%", state.backgroundTint * 100))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Preview") {
+                Toggle("Wrap", isOn: Binding(
+                    get: { state.previewWrap },
+                    set: { state.previewWrap = $0 }
+                ))
+                Toggle("Monospace", isOn: Binding(
+                    get: { state.previewMonospace },
+                    set: { state.previewMonospace = $0 }
+                ))
+            }
+
             HotkeySettingsView()
             ExportImportView()
 

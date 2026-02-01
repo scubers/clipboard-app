@@ -33,6 +33,9 @@ func ct_items_add_image(_ core: UnsafeMutableRawPointer?, _ mime: UnsafePointer<
 @_silgen_name("ct_items_get_blob_path")
 func ct_items_get_blob_path(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ outPath: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
 
+@_silgen_name("ct_items_touch_last_copied")
+func ct_items_touch_last_copied(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ copiedAtMs: Int64) -> Int32
+
 @_silgen_name("ct_items_set_pinned")
 func ct_items_set_pinned(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?, _ pinned: Int32) -> Int32
 
@@ -217,6 +220,17 @@ final class CoreClient {
         }
         defer { if let out { ct_free(out) } }
         return String(cString: out!)
+    }
+
+    func touchLastCopied(id: String) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let rc = id.withCString { cid in
+            ct_items_touch_last_copied(core, cid, nowMs)
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
     }
 
     func getPrivacyMode() throws -> Bool {

@@ -23,6 +23,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Menu-bar utility behavior
         NSApp.setActivationPolicy(.accessory)
 
+        // Scroll indicator thickness/auto-hide mostly follow system settings.
+
         // Start clipboard monitoring even if the UI is never opened.
         SharedAppState.shared.startMonitoring()
 
@@ -104,18 +106,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             p.collectionBehavior = [.moveToActiveSpace]
             p.hidesOnDeactivate = true
 
+            // Hide traffic-light buttons for a cleaner popover look.
+            hideTrafficLights(p)
+
             // Persist window frame.
             observePanelFrame(p)
 
             // Apply last saved frame (or default placement).
             applyInitialPanelPlacement(p)
 
-            // ESC to close
-            localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak p] event in
-                if event.keyCode == 53 {
-                    p?.orderOut(nil)
-                    return nil
+            // ESC to close; Return to paste (default behavior).
+            localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self, weak p] event in
+                // Only handle keys when our panel is visible.
+                if let p, p.isVisible {
+                    // ESC
+                    if event.keyCode == 53 {
+                        p.orderOut(nil)
+                        return nil
+                    }
+                    // Up / Down selection
+                    if event.keyCode == 126 { // up
+                        NotificationCenter.default.post(name: .clipboardToolSelectPrev, object: nil)
+                        return nil
+                    }
+                    if event.keyCode == 125 { // down
+                        NotificationCenter.default.post(name: .clipboardToolSelectNext, object: nil)
+                        return nil
+                    }
+
+                    // Return / Enter
+                    if event.keyCode == 36 || event.keyCode == 76 {
+                        NotificationCenter.default.post(name: .clipboardToolPasteAction, object: nil)
+                        return nil
+                    }
                 }
+                _ = self
                 return event
             }
 
@@ -213,6 +238,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSWorkspace.shared.open(url)
             }
         }
+    }
+
+    private func hideTrafficLights(_ panel: NSPanel) {
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
     }
 
     private func applyInitialPanelPlacement(_ panel: NSPanel) {

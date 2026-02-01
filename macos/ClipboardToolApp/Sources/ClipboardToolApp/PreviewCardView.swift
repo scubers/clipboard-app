@@ -3,6 +3,8 @@ import SwiftUI
 
 struct PreviewCardView: View {
     @ObservedObject var vm: ClipboardViewModel
+    let wrap: Bool
+    let monospace: Bool
 
     private var selectedItem: Item? {
         guard let id = vm.selectedID else { return nil }
@@ -51,25 +53,23 @@ struct PreviewCardView: View {
             }
 
             Group {
-                if vm.previewImage != nil {
-                    ScrollView([.vertical, .horizontal]) {
-                        if let img = vm.previewImage {
-                            Image(nsImage: img)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                        }
-                    }
+                if let img = vm.previewImage {
+                    // Show full image without scroll; scale-to-fit while keeping aspect ratio.
+                    Image(nsImage: img)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.vertical, 6)
                 } else {
-                    ScrollView([.vertical, vm.previewWrap ? [] : .horizontal]) {
+                    ScrollView([.vertical, wrap ? [] : .horizontal]) {
                         Text(vm.previewText)
-                            .font(vm.previewMonospace ? .system(.body, design: .monospaced) : .body)
-                            .frame(maxWidth: vm.previewWrap ? .infinity : nil, alignment: .leading)
-                            .fixedSize(horizontal: !vm.previewWrap, vertical: true)
+                            .font(monospace ? .system(.body, design: .monospaced) : .body)
+                            .frame(maxWidth: wrap ? .infinity : nil, alignment: .leading)
+                            .fixedSize(horizontal: !wrap, vertical: true)
                             .textSelection(.enabled)
                             .padding(.vertical, 6)
                     }
+                    .scrollIndicators(.automatic)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
