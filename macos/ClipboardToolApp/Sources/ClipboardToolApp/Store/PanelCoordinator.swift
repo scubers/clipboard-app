@@ -35,7 +35,7 @@ final class PanelCoordinator {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.panel?.orderOut(nil)
             }
         }
@@ -209,7 +209,7 @@ final class PanelCoordinator {
             object: panel,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.savePanelFrame(panel)
             }
         }
@@ -219,7 +219,7 @@ final class PanelCoordinator {
             object: panel,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.savePanelFrame(panel)
             }
         }
