@@ -63,6 +63,12 @@ static uintptr_t ct_thread_id() {
 
 #line 1 "cgo-generated-wrapper"
 
+#line 3 "purge.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
+
 #line 3 "search.go"
 
 #include <stdlib.h>
@@ -173,6 +179,14 @@ extern int ct_settings_set_retention_max(void* corePtr, int maxItems);
 extern int ct_items_clear_all(void* corePtr, int keepPinned, long long deletedAtMs);
 extern int ct_items_set_pinned(void* corePtr, char* id, int pinned);
 extern int ct_items_soft_delete(void* corePtr, char* id, long long deletedAtMs);
+
+// ct_items_remove_history physically deletes rows and associated blob files.
+//
+// keepPinned:
+// - 0 => remove everything (including pinned)
+// - 1 => keep pinned rows
+//
+extern int ct_items_remove_history(void* corePtr, int keepPinned);
 extern int ct_items_search_json(void* corePtr, char* queryUTF8, int limit, int offset, char** outJSON);
 
 // ct_items_search_json_ex extends search with includeDeleted support.

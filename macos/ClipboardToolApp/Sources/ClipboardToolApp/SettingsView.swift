@@ -97,10 +97,38 @@ struct SettingsView: View {
                     }
                 }
 
-                Button("Clear History (keep pinned)") {
+                Button("Clear History (soft delete, keep pinned)") {
                     Task {
                         do { try state.core.clearAll(keepPinned: true) } catch { self.error = String(describing: error) }
                         await refreshStats()
+                    }
+                }
+
+                Button("Remove History (physical delete, keep pinned)") {
+                    let alert = NSAlert()
+                    alert.messageText = "Permanently remove history?"
+                    alert.informativeText = "This will physically delete history rows from the database (keeping pinned items). It will also remove any stored blob files for non-text items. This cannot be undone."
+                    alert.addButton(withTitle: "Remove")
+                    alert.addButton(withTitle: "Cancel")
+                    if alert.runModal() == .alertFirstButtonReturn {
+                        Task {
+                            do { try state.core.removeHistory(keepPinned: true) } catch { self.error = String(describing: error) }
+                            await refreshStats()
+                        }
+                    }
+                }
+
+                Button("Remove History (physical delete, include pinned)") {
+                    let alert = NSAlert()
+                    alert.messageText = "Permanently remove ALL history?"
+                    alert.informativeText = "This will physically delete ALL rows from the database, including pinned items, and remove blob files. This cannot be undone."
+                    alert.addButton(withTitle: "Remove All")
+                    alert.addButton(withTitle: "Cancel")
+                    if alert.runModal() == .alertFirstButtonReturn {
+                        Task {
+                            do { try state.core.removeHistory(keepPinned: false) } catch { self.error = String(describing: error) }
+                            await refreshStats()
+                        }
                     }
                 }
             }

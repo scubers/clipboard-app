@@ -37,6 +37,11 @@ If permission is missing, the copy-to-clipboard still works, but auto-paste will
 ### Search debounce
 Search refresh is debounced while typing to avoid excessive queries.
 
+### Remove history (physical delete)
+In Settings, "Remove History" will physically delete rows from SQLite. For non-text items (images), it also deletes the stored blob files under:
+`~/Library/Application Support/ClipboardTool/data/blobs/`
+This is irreversible.
+
 ## Next steps
 1) Improve "focus not lost" behavior: explore a non-activating panel or alternative event routing.
 2) Make paste-to-previous-app more robust (retry paste after activation; optionally use AX to insert text directly).

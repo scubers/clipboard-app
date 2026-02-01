@@ -42,6 +42,9 @@ func ct_items_soft_delete(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<
 @_silgen_name("ct_items_clear_all")
 func ct_items_clear_all(_ core: UnsafeMutableRawPointer?, _ keepPinned: Int32, _ deletedAtMs: Int64) -> Int32
 
+@_silgen_name("ct_items_remove_history")
+func ct_items_remove_history(_ core: UnsafeMutableRawPointer?, _ keepPinned: Int32) -> Int32
+
 @_silgen_name("ct_db_optimize")
 func ct_db_optimize(_ core: UnsafeMutableRawPointer?) -> Int32
 
@@ -286,6 +289,14 @@ final class CoreClient {
     func clearAll(keepPinned: Bool) throws {
         guard let core else { throw CoreError.rc(-1, "core not opened") }
         let rc = ct_items_clear_all(core, keepPinned ? 1 : 0, 0)
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
+    func removeHistory(keepPinned: Bool) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = ct_items_remove_history(core, keepPinned ? 1 : 0)
         if rc != 0 {
             throw CoreError.rc(rc, Self.lastError())
         }
