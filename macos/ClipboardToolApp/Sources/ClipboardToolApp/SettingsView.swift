@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var retentionMax: Int = 500
     @State private var stats: Stats?
     @State private var error: String?
+    @State private var showRestartPrompt: Bool = false
 
     var body: some View {
         Form {
@@ -43,6 +44,7 @@ struct SettingsView: View {
                         if p.runModal() == .OK, let url = p.url {
                             do {
                                 try state.reloadSharedDataDir(url.path)
+                                showRestartPrompt = true
                             } catch {
                                 self.error = String(describing: error)
                             }
@@ -54,6 +56,7 @@ struct SettingsView: View {
                             // Reset by saving default path.
                             try AppPaths.setSharedDir(AppPaths.defaultSharedBaseDir)
                             try state.reloadSharedDataDir(AppPaths.defaultSharedBaseDir.path)
+                            showRestartPrompt = true
                         } catch {
                             self.error = String(describing: error)
                         }
@@ -204,6 +207,16 @@ struct SettingsView: View {
         .frame(width: 560)
         .task {
             await bootstrap()
+        }
+        .alert("Restart Required", isPresented: $showRestartPrompt) {
+            Button("Restart") {
+                AppRelauncher.restart()
+            }
+            Button("Later", role: .cancel) {
+                // no-op
+            }
+        } message: {
+            Text("The shared data directory has changed. Please restart the app to ensure all components use the new location.")
         }
     }
 
