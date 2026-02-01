@@ -29,91 +29,14 @@ mkdir -p "$DMG_ROOT"
 
 echo "[build] tag=${TAG} version=${VERSION}"
 
-# 1) Build Go core dylib (required for Swift linking)
-echo "[core] building Go dylib"
-"$ROOT_DIR/scripts/build_core.sh"
-
-# Sync core artifacts into SwiftPM vendor folder
-mkdir -p "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core"
-cp -f "$ROOT_DIR/core/build/libclipboardtool.dylib" "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core/libclipboardtool.dylib"
-cp -f "$ROOT_DIR/core/build/clipboardtool.h" "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core/clipboardtool.h"
-
-# Ensure SwiftPM Resources path exists (Package.swift references ../../Resources).
-mkdir -p "$ROOT_DIR/macos/ClipboardToolApp/Resources"
-
-# 2) Build SwiftPM release executable
-pushd "$APP_SPM_DIR" >/dev/null
-swift --version
-swift build -c release
-
-# SwiftPM output path varies; use --show-bin-path for stability.
-BIN_DIR="$(swift build -c release --show-bin-path)"
-BIN_SRC="$BIN_DIR/ClipboardToolApp"
-if [[ ! -f "$BIN_SRC" ]]; then
-  echo "Built executable not found at: $BIN_SRC" >&2
-  echo "Bin dir: $BIN_DIR" >&2
-  ls -la "$BIN_DIR" || true
-  exit 1
-fi
-popd >/dev/null
-
-# 3) Assemble .app bundle
-mkdir -p "$APP_BUNDLE/Contents/MacOS"
-mkdir -p "$APP_BUNDLE/Contents/Frameworks"
-
-BIN_DST="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
-cp -f "$BIN_SRC" "$BIN_DST"
-chmod +x "$BIN_DST"
-
-# Copy Go core dylib into app bundle Frameworks.
-CORE_DYLIB_SRC="$ROOT_DIR/macos/ClipboardToolApp/Vendor/core/libclipboardtool.dylib"
-if [[ ! -f "$CORE_DYLIB_SRC" ]]; then
-  echo "Missing core dylib at: $CORE_DYLIB_SRC" >&2
-  exit 1
-fi
-cp -f "$CORE_DYLIB_SRC" "$APP_BUNDLE/Contents/Frameworks/libclipboardtool.dylib"
-
-# Ensure the executable can locate the dylib at runtime.
-# Add rpath to Frameworks. (We don't remove existing rpaths; harmless.)
-install_name_tool -add_rpath "@executable_path/../Frameworks" "$BIN_DST" || true
-
-# Generate Info.plist
-INFO_PLIST="$APP_BUNDLE/Contents/Info.plist"
-cat >"$INFO_PLIST" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleDevelopmentRegion</key>
-  <string>en</string>
-  <key>CFBundleExecutable</key>
-  <string>${APP_NAME}</string>
-  <key>CFBundleIdentifier</key>
-  <string>${BUNDLE_ID}</string>
-  <key>CFBundleInfoDictionaryVersion</key>
-  <string>6.0</string>
-  <key>CFBundleName</key>
-  <string>${APP_NAME}</string>
-  <key>CFBundleDisplayName</key>
-  <string>${APP_NAME}</string>
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-  <key>CFBundleShortVersionString</key>
-  <string>${VERSION}</string>
-  <key>CFBundleVersion</key>
-  <string>${VERSION}</string>
-  <key>LSMinimumSystemVersion</key>
-  <string>14.0</string>
-  <key>LSApplicationCategoryType</key>
-  <string>public.app-category.productivity</string>
-</dict>
-</plist>
-PLIST
+# 1) Assemble .app bundle (single source of truth)
+# This will also build core dylib and the SwiftPM release executable.
+"$ROOT_DIR/scripts/assemble_pasty_app.sh" "$VERSION" "$APP_BUNDLE"
 
 # Optional: provide Applications shortcut for drag-install UX
 ln -sf /Applications "$DMG_ROOT/Applications"
 
-# 3) Build DMG
+# 2) Build DMG
 mkdir -p "$DIST"
 DMG_PATH="$DIST/${APP_NAME}-${VERSION}.dmg"
 rm -f "$DMG_PATH"
