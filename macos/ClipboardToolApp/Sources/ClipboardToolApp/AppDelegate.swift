@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private enum Keys {
         static let panelFrame = "ClipboardTool.panelFrame"
+        static let lastPanelScreenID = "ClipboardTool.lastPanelScreenID"
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -154,8 +155,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel else { return }
 
-        // Placement is handled by applyInitialPanelPlacement(p) when the panel is created.
-        // On subsequent opens we keep last position; no need to reposition near status item.
+        // Placement:
+        // - First open: applyInitialPanelPlacement(p)
+        // - Subsequent opens: keep last position, *unless* the current activation is on a different
+        //   screen than the last activation. In that case, show at default position on the current screen.
+        maybeRelocatePanelForCurrentMouseScreen(panel)
 
         // Apply current traffic-light preference each time.
         let hide = UserDefaults.standard.object(forKey: "ClipboardTool.hideTrafficLights") == nil
@@ -265,8 +269,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // First open: current screen (by mouse position), centered slightly top.
+        placePanelAtDefaultPosition(on: mouseScreen() ?? NSScreen.main, panel: panel)
+    }
+
+    private func screenID(_ screen: NSScreen) -> UInt32? {
+        // NSScreenNumber is a CGDirectDisplayID.
+        let n = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        return n?.uint32Value
+    }
+
+    private func mouseScreen() -> NSScreen? {
         let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main
+        return NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main
+    }
+
+    private func placePanelAtDefaultPosition(on screen: NSScreen?, panel: NSPanel) {
         guard let screen else { return }
         let vf = screen.visibleFrame
         let size = panel.frame.size
@@ -275,8 +292,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // "Slightly top": shift up by ~12% of visible height.
         let y = vf.midY + vf.height * 0.12 - size.height / 2
 
-        panel.setFrameOrigin(NSPoint(x: max(vf.minX + 8, min(x, vf.maxX - size.width - 8)),
-                                    y: max(vf.minY + 8, min(y, vf.maxY - size.height - 8))))
+        panel.setFrameOrigin(NSPoint(
+            x: max(vf.minX + 8, min(x, vf.maxX - size.width - 8)),
+            y: max(vf.minY + 8, min(y, vf.maxY - size.height - 8))
+        ))
+    }
+
+    private func maybeRelocatePanelForCurrentMouseScreen(_ panel: NSPanel) {
+        guard let curScreen = mouseScreen() else { return }
+        guard let curID = screenID(curScreen) else { return }
+
+        let lastID = UInt32(UserDefaults.standard.integer(forKey: Keys.lastPanelScreenID))
+
+        // Detect whether the current saved frame is actually on the current mouse screen.
+        // (Users can have multiple displays; frames are in a global coordinate space.)
+        let curVF = curScreen.visibleFrame
+        let frame = panel.frame
+        let frameCenter = NSPoint(x: frame.midX, y: frame.midY)
+        let frameIsOnCurScreen = curVF.contains(frameCenter)
+
+        // Rule:
+        // - Always show on the mouse screen.
+        // - If switching screens between activations, use default placement.
+        // - If the stored frame is not on the mouse screen (e.g. first run after update / stale prefs),
+        //   also reset to default placement on the mouse screen.
+        if (lastID != 0 && lastID != curID) || !frameIsOnCurScreen {
+            placePanelAtDefaultPosition(on: curScreen, panel: panel)
+            savePanelFrame(panel)
+        }
+
+        UserDefaults.standard.set(Int(curID), forKey: Keys.lastPanelScreenID)
     }
 
     private func observePanelFrame(_ panel: NSPanel) {
