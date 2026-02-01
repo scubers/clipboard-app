@@ -125,6 +125,13 @@ func ct_core_open(dataDir *C.char, outCore **C.void) C.int {
 		return 4 // CT_ERR_DB
 	}
 
+	// Ensure any legacy absolute blob paths are rewritten to relative paths.
+	if err := normalizeBlobPaths(db, dir); err != nil {
+		setErr("normalize blob paths: " + err.Error())
+		_ = db.Close()
+		return 4
+	}
+
 	hasFTS, _ := detectFTS5(db)
 
 	s, err := loadSettings(dir)
