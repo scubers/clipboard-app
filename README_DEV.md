@@ -17,7 +17,7 @@
 - Local runnable .app bundle (quick manual verification):
   ```bash
   ./scripts/build_macos_app_bundle.sh
-  open -n dist/ClipboardTool.app
+  open -n dist/Pasty.app
   ```
 
 ## UI / UX notes
