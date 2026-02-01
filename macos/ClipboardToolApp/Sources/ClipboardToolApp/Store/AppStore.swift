@@ -6,6 +6,7 @@ final class AppStore: ObservableObject {
     static let shared = AppStore()
 
     let core = CoreClient()
+    let clipboardRepo: ClipboardRepository
     let monitor = PasteboardMonitor(interval: 0.5)
     let ocrQueue = OCRQueueManager()
 
@@ -59,7 +60,8 @@ final class AppStore: ObservableObject {
         // Best-effort open with shared dir (configurable via local config).
         let dir = AppPaths.effectiveSharedDir().path
         sharedDataDir = dir
-        try? core.open(dataDir: dir)
+        clipboardRepo = CoreClipboardRepository(core: core)
+        try? clipboardRepo.open(dataDir: dir)
 
         // No legacy UserDefaults migration needed (project not shipped yet).
         let loaded = MacOSConfigStore.load(sharedDir: dir)
@@ -110,7 +112,7 @@ final class AppStore: ObservableObject {
         try AppPaths.setSharedDir(url)
 
         // Reopen core against the new directory.
-        try core.reopen(dataDir: url.path)
+        try clipboardRepo.reopen(dataDir: url.path)
         sharedDataDir = url.path
 
         // Reload macOS settings for the new shared dir.

@@ -10,12 +10,14 @@
 		049CDA98FD2A243FC7A45625 /* PreviewSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC445A06A2C652C0853CB0C3 /* PreviewSettings.swift */; };
 		1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0714EBB2913B26EBA9A3D27 /* ExportImportView.swift */; };
 		1588BA02AD306AC34D6B2A91 /* PasteboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F8BC899F7F5FE4CD0E97A1 /* PasteboardMonitor.swift */; };
+		30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */; };
 		3816359B17BA11D81FDC7D3A /* WindowChromeTuner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EE5E60E10FE7626A05C2FF /* WindowChromeTuner.swift */; };
 		394CB19379081E12F02529FF /* MacOSConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F17AF90735A2ACECB0A09B2 /* MacOSConfigStore.swift */; };
 		43B0C10D89B0FFC659B62D69 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEA7E73B7EACB1B67A8F809 /* AppNotifications.swift */; };
 		461FA2810E1743032A6BE099 /* AppRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618614560524FACC30B08027 /* AppRelauncher.swift */; };
 		473A71ED932CDDA7512710FE /* CoreClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB67BE9FDD66B531990C42F /* CoreClient.swift */; };
 		4F3368450DEFE2D2CBD7B87E /* HotkeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E36DA9B2314E3D71E8DD58A /* HotkeyRecorder.swift */; };
+		5167CC7FFF439445DC2DF6FC /* ClipboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */; };
 		5CB99600215CF0984AAC632E /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C6461DC065611310C5BC4F9 /* Item.swift */; };
 		648FF37CFAB721D719CC96A1 /* ClipboardToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963A1CCCCCE66388EBCEB6B7 /* ClipboardToolApp.swift */; };
 		7B6218BBA7547C91266474AC /* SettingsSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */; };
@@ -41,6 +43,7 @@
 		D87F5ECE9DACBB222214E744 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38DD235D10F32FBF5FB11F4D /* AppPaths.swift */; };
 		EBA7938469728072FCEAF2B2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A545BB2494BBAAADDE3C1D7B /* ContentView.swift */; };
 		EE08ACD223112F0795C5EB26 /* CoreBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FEB3E7CF2DAB55C0CE10C5 /* CoreBridge.swift */; };
+		EFF5052210ABB48A94DF5DAF /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0AED220E85ED339A70B5B1 /* SettingsViewModel.swift */; };
 		F957A0E3EFE858B5CC4D3CB0 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87AFF5842827C087C4845F1B /* HotkeyManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -48,6 +51,7 @@
 		0FB9A3617F0B1B2D386481B4 /* PillButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillButton.swift; sourceTree = "<group>"; };
 		17F45E5FDFA5DF994E20D792 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		21F8BC899F7F5FE4CD0E97A1 /* PasteboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardMonitor.swift; sourceTree = "<group>"; };
+		260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreClipboardRepository.swift; sourceTree = "<group>"; };
 		2DD89BCACF9DC5005B1C89BC /* SettingsPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPages.swift; sourceTree = "<group>"; };
 		2DE362786F450EB9CED01623 /* HotkeySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeySettingsView.swift; sourceTree = "<group>"; };
 		33D610083487C1E6BA03AB67 /* PreviewCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewCardView.swift; sourceTree = "<group>"; };
@@ -59,6 +63,7 @@
 		5E8768EA85A0154395330C46 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		618614560524FACC30B08027 /* AppRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelauncher.swift; sourceTree = "<group>"; };
 		61FEB3E7CF2DAB55C0CE10C5 /* CoreBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBridge.swift; sourceTree = "<group>"; };
+		6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardRepository.swift; sourceTree = "<group>"; };
 		6E36DA9B2314E3D71E8DD58A /* HotkeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorder.swift; sourceTree = "<group>"; };
 		701834DF515D28FF91EEB479 /* MainPanelViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelViewModel.swift; sourceTree = "<group>"; };
 		74321B4BB326E799BBF3A3E0 /* IntegrityResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrityResult.swift; sourceTree = "<group>"; };
@@ -81,6 +86,7 @@
 		DB6AC54A588B60015F922EB6 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		E2C5E7D41D792D51E611DECB /* UIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIModels.swift; sourceTree = "<group>"; };
 		EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSidebarView.swift; sourceTree = "<group>"; };
+		ED0AED220E85ED339A70B5B1 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -136,6 +142,7 @@
 		2A91F65C5D153D26083AD6B2 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				DDF422D2D277CB6AA9D5210D /* ViewModels */,
 				9DB0B5A5AA81B40211BC715F /* Views */,
 			);
 			path = Settings;
@@ -278,6 +285,7 @@
 			children = (
 				87339B169033CD518804ACD4 /* Clients */,
 				280B3A5F59F337B9C4646990 /* CoreBridge */,
+				FFB4F5003A2E6E29954BF358 /* Repositories */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -320,6 +328,14 @@
 			path = Hotkey;
 			sourceTree = "<group>";
 		};
+		DDF422D2D277CB6AA9D5210D /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				ED0AED220E85ED339A70B5B1 /* SettingsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		DF9246BCA7E60479A3A5686A /* ClipboardCapture */ = {
 			isa = PBXGroup;
 			children = (
@@ -341,6 +357,15 @@
 			);
 			name = ClipboardToolApp;
 			path = ../ClipboardToolApp/Sources/ClipboardToolApp;
+			sourceTree = "<group>";
+		};
+		FFB4F5003A2E6E29954BF358 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */,
+				260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */,
+			);
+			path = Repositories;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -442,10 +467,12 @@
 				D87F5ECE9DACBB222214E744 /* AppPaths.swift in Sources */,
 				461FA2810E1743032A6BE099 /* AppRelauncher.swift in Sources */,
 				895DB92D7E66B13B551CC4C3 /* AppStore.swift in Sources */,
+				5167CC7FFF439445DC2DF6FC /* ClipboardRepository.swift in Sources */,
 				648FF37CFAB721D719CC96A1 /* ClipboardToolApp.swift in Sources */,
 				EBA7938469728072FCEAF2B2 /* ContentView.swift in Sources */,
 				EE08ACD223112F0795C5EB26 /* CoreBridge.swift in Sources */,
 				473A71ED932CDDA7512710FE /* CoreClient.swift in Sources */,
+				30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */,
 				1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */,
 				CAB7A46434BB41B18875A49E /* HotkeyCapture.swift in Sources */,
 				F957A0E3EFE858B5CC4D3CB0 /* HotkeyManager.swift in Sources */,
@@ -468,6 +495,7 @@
 				7B6218BBA7547C91266474AC /* SettingsSidebarView.swift in Sources */,
 				B1247131FE19660A6C8578B7 /* SettingsUIComponents.swift in Sources */,
 				B83EF28DA0100C429564BC33 /* SettingsView.swift in Sources */,
+				EFF5052210ABB48A94DF5DAF /* SettingsViewModel.swift in Sources */,
 				A766ABB8511F908782E130FC /* Stats.swift in Sources */,
 				97FF8CE2575B05C593133396 /* UIModels.swift in Sources */,
 				CD3EC2021ED410541BD8B78B /* VisualEffectMaterial.swift in Sources */,

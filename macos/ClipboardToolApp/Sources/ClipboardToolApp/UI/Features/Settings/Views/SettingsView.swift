@@ -2,20 +2,15 @@ import AppKit
 import SwiftUI
 
 struct SettingsView: View {
-    @StateObject private var appState = AppStore.shared
+    @StateObject private var store = AppStore.shared
+    @StateObject private var vm = SettingsViewModel()
     @StateObject private var hk = HotkeyManager.shared
 
     @State private var selection: SettingsPage = .general
 
-    // Core-backed settings
-    @State private var privacyMode: Bool = false
-    @State private var retentionMax: Int = 500
-
     // Shortcuts recording
     @State private var isRecordingHotkey: Bool = false
     @StateObject private var hotkeyCapture = HotkeyCapture()
-
-    @State private var error: String?
 
     private let sidebarWidth: CGFloat = 240
 
@@ -30,7 +25,7 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
             Rectangle()
-                .fill(Color.black.opacity(appState.backgroundTint))
+                .fill(Color.black.opacity(store.backgroundTint))
                 .ignoresSafeArea()
 
             HStack(spacing: 0) {
@@ -45,7 +40,7 @@ struct SettingsView: View {
         }
         .frame(width: 940, height: 620)
         .task {
-            await bootstrap()
+            await vm.bootstrap()
         }
         .onChange(of: selection) { _, _ in
             stopHotkeyCapture()
@@ -105,7 +100,7 @@ struct SettingsView: View {
                     advancedPage
                 }
 
-                if let error {
+                if let error = vm.error {
                     Text(error)
                         .foregroundStyle(.red)
                         .textSelection(.enabled)
@@ -130,12 +125,7 @@ struct SettingsView: View {
                         get: { LaunchAtLoginManager.shared.enabled },
                         set: { newValue in
                             Task { @MainActor in
-                                do {
-                                    try LaunchAtLoginManager.shared.setEnabled(newValue)
-                                } catch {
-                                    self.error = "Launch at login failed: \(error)"
-                                    LaunchAtLoginManager.shared.refresh()
-                                }
+                                vm.toggleLaunchAtLogin(newValue)
                             }
                         }
                     ))
@@ -145,17 +135,17 @@ struct SettingsView: View {
 
             SettingsCard(title: "Monitoring") {
                 SettingsRow(title: "Enable monitoring") {
-                    Toggle("", isOn: $appState.monitoringEnabled)
+                    Toggle("", isOn: $store.monitoringEnabled)
                         .labelsHidden()
                 }
 
                 SettingsRow(title: "Poll interval") {
                     HStack(spacing: 10) {
                         Slider(value: Binding(
-                            get: { appState.pollIntervalMs },
-                            set: { appState.pollIntervalMs = $0; appState.applyPollInterval() }
+                            get: { store.pollIntervalMs },
+                            set: { store.pollIntervalMs = $0; store.applyPollInterval() }
                         ), in: 100...2000)
-                        Text("\(Int(appState.pollIntervalMs))ms")
+                        Text("\(Int(store.pollIntervalMs))ms")
                             .font(.system(size: 12, weight: .semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -169,7 +159,7 @@ struct SettingsView: View {
 
             SettingsCard(title: "Layout") {
                 SettingsRow(title: "Default preview layout") {
-                    Picker("", selection: $appState.previewLayout) {
+                    Picker("", selection: $store.previewLayout) {
                         Text("L").tag(PreviewLayout.previewLeft)
                         Text("R").tag(PreviewLayout.previewRight)
                         Text("B").tag(PreviewLayout.previewBottom)
@@ -189,8 +179,8 @@ struct SettingsView: View {
             SettingsCard(title: "Background") {
                 SettingsRow(title: "Tint (readability)") {
                     HStack(spacing: 10) {
-                        Slider(value: $appState.backgroundTint, in: 0.02...0.80)
-                        Text(String(format: "%.0f%%", appState.backgroundTint * 100))
+                        Slider(value: $store.backgroundTint, in: 0.02...0.80)
+                        Text(String(format: "%.0f%%", store.backgroundTint * 100))
                             .font(.system(size: 12, weight: .semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -207,7 +197,7 @@ struct SettingsView: View {
 
             SettingsCard(title: "Window") {
                 SettingsRow(title: "Hide traffic lights") {
-                    Toggle("", isOn: $appState.hideTrafficLights)
+                    Toggle("", isOn: $store.hideTrafficLights)
                         .labelsHidden()
                 }
                 Text("Keeps the popover visually minimal (Raycast-like).")
@@ -221,11 +211,11 @@ struct SettingsView: View {
         VStack(spacing: 14) {
             SettingsCard(title: "Text") {
                 SettingsRow(title: "Wrap") {
-                    Toggle("", isOn: $appState.previewWrap)
+                    Toggle("", isOn: $store.previewWrap)
                         .labelsHidden()
                 }
                 SettingsRow(title: "Monospace") {
-                    Toggle("", isOn: $appState.previewMonospace)
+                    Toggle("", isOn: $store.previewMonospace)
                         .labelsHidden()
                 }
             }
@@ -251,7 +241,7 @@ struct SettingsView: View {
                     SettingsPathText(path: AppPaths.localBaseDir.path)
                 }
                 SettingsRow(title: "Shared directory") {
-                    SettingsPathText(path: appState.sharedDataDir)
+                    SettingsPathText(path: store.sharedDataDir)
                 }
                 SettingsRow(title: "Actions") {
                     HStack(spacing: 10) {
@@ -352,14 +342,10 @@ struct SettingsView: View {
         VStack(spacing: 14) {
             SettingsCard(title: "Privacy") {
                 SettingsRow(title: "Privacy mode") {
-                    Toggle("", isOn: $privacyMode)
+                    Toggle("", isOn: $vm.privacyMode)
                         .labelsHidden()
-                        .onChange(of: privacyMode) { _, newValue in
-                            do {
-                                try appState.core.setPrivacyMode(newValue)
-                            } catch {
-                                self.error = String(describing: error)
-                            }
+                        .onChange(of: vm.privacyMode) { _, newValue in
+                            vm.setPrivacyMode(newValue)
                         }
                 }
                 Text("When enabled, the app stops capturing new clipboard items.")
@@ -371,10 +357,10 @@ struct SettingsView: View {
                 SettingsRow(title: "Max items") {
                     HStack(spacing: 10) {
                         Slider(value: Binding(
-                            get: { Double(retentionMax) },
-                            set: { retentionMax = Int($0.rounded()); setRetentionMax(retentionMax) }
+                            get: { Double(vm.retentionMax) },
+                            set: { vm.retentionMax = Int($0.rounded()); vm.setRetentionMax(vm.retentionMax) }
                         ), in: 10...100000)
-                        Text("\(retentionMax)")
+                        Text("\(vm.retentionMax)")
                             .font(.system(size: 12, weight: .semibold))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -438,22 +424,9 @@ struct SettingsView: View {
 
     // MARK: - Helpers
 
-    private func bootstrap() async {
-        do {
-            privacyMode = try appState.core.getPrivacyMode()
-            retentionMax = try appState.core.getRetentionMax()
-        } catch {
-            self.error = String(describing: error)
-        }
-    }
+    // bootstrap moved to SettingsViewModel
 
-    private func setRetentionMax(_ v: Int) {
-        do {
-            try appState.core.setRetentionMax(v)
-        } catch {
-            self.error = String(describing: error)
-        }
-    }
+    // setRetentionMax moved to SettingsViewModel
 
     private func chooseSharedDir() {
         let p = NSOpenPanel()
@@ -461,28 +434,19 @@ struct SettingsView: View {
         p.canChooseDirectories = true
         p.allowsMultipleSelection = false
         p.prompt = "Use This Folder"
-        p.directoryURL = URL(fileURLWithPath: appState.sharedDataDir, isDirectory: true)
+        p.directoryURL = URL(fileURLWithPath: store.sharedDataDir, isDirectory: true)
 
         if p.runModal() == .OK, let url = p.url {
-            do {
-                try appState.reloadSharedDataDir(url.path)
-            } catch {
-                self.error = String(describing: error)
-            }
+            vm.reloadSharedDataDir(url.path)
         }
     }
 
     private func resetSharedDir() {
-        do {
-            try AppPaths.setSharedDir(AppPaths.defaultSharedBaseDir)
-            try appState.reloadSharedDataDir(AppPaths.defaultSharedBaseDir.path)
-        } catch {
-            self.error = String(describing: error)
-        }
+        vm.resetSharedDirToDefault()
     }
 
     private func openSharedDir() {
-        NSWorkspace.shared.open(URL(fileURLWithPath: appState.sharedDataDir, isDirectory: true))
+        vm.openSharedDirInFinder()
     }
 
     private func currentHotkeyDisplay() -> String {
@@ -524,26 +488,11 @@ struct SettingsView: View {
         hotkeyCapture.stop()
     }
 
-    private func runOptimize() async {
-        do { try appState.core.optimize() } catch { self.error = String(describing: error) }
-    }
+    private func runOptimize() async { await vm.runOptimize() }
 
-    private func runVacuum() async {
-        do { try appState.core.vacuum() } catch { self.error = String(describing: error) }
-    }
+    private func runVacuum() async { await vm.runVacuum() }
 
-    private func runIntegrityCheck() async {
-        do {
-            let r = try appState.core.integrityCheck()
-            if !r.ok {
-                self.error = "Integrity check failed: \(r.message)"
-            } else {
-                self.error = nil
-            }
-        } catch {
-            self.error = String(describing: error)
-        }
-    }
+    private func runIntegrityCheck() async { await vm.runIntegrityCheck() }
 
     private func exportToFolder() {
         let panel = NSOpenPanel()
@@ -553,11 +502,7 @@ struct SettingsView: View {
         panel.canCreateDirectories = true
         panel.prompt = "Export"
         if panel.runModal() == .OK, let url = panel.url {
-            do {
-                try appState.core.exportToDir(url.path)
-            } catch {
-                self.error = String(describing: error)
-            }
+            vm.exportToDir(url.path)
         }
     }
 
@@ -574,12 +519,7 @@ struct SettingsView: View {
             alert.addButton(withTitle: "Import")
             alert.addButton(withTitle: "Cancel")
             if alert.runModal() == .alertFirstButtonReturn {
-                do {
-                    try appState.core.importFromDir(url.path, keepBackup: true)
-                    appState.notifyDataSourceChanged()
-                } catch {
-                    self.error = String(describing: error)
-                }
+                vm.importFromDir(url.path, keepBackup: true)
             }
         }
     }
@@ -592,12 +532,7 @@ struct SettingsView: View {
         alert.addButton(withTitle: "Cancel")
         if alert.runModal() == .alertFirstButtonReturn {
             Task { @MainActor in
-                do {
-                    try appState.core.removeHistory(keepPinned: keepPinned)
-                    appState.notifyDataSourceChanged()
-                } catch {
-                    self.error = String(describing: error)
-                }
+                await vm.removeHistory(keepPinned: keepPinned)
             }
         }
     }

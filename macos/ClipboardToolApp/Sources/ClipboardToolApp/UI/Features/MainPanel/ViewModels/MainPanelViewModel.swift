@@ -23,7 +23,7 @@ final class MainPanelViewModel: ObservableObject {
     @Published var error: String?
 
     private let store = AppStore.shared
-    private var core: CoreClient { store.core }
+    private var repo: ClipboardRepository { store.clipboardRepo }
     private var monitor: PasteboardMonitor { store.monitor }
 
     private enum Keys {
@@ -57,7 +57,7 @@ final class MainPanelViewModel: ObservableObject {
         do {
             // Core is opened by AppStore on app start; but if something failed,
             // try again using the current shared data dir.
-            try core.open(dataDir: store.sharedDataDir)
+            try repo.open(dataDir: store.sharedDataDir)
             refresh()
         } catch {
             self.error = String(describing: error)
@@ -70,17 +70,17 @@ final class MainPanelViewModel: ObservableObject {
                 error = nil
                 let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
                 if q.isEmpty {
-                    items = try core.list()
+                    items = try repo.list(limit: 200, offset: 0)
                     applyFilterAndSelection()
                     return
                 }
 
                 // 1) Initial search (may include OCR hits already).
-                items = try core.search(q)
+                items = try repo.search(q, limit: 200, offset: 0)
                 applyFilterAndSelection()
 
                 // 2) On-demand OCR (queue): keep draining backlog serially with low intensity.
-                store.ocrQueue.kick(core: core)
+                store.ocrQueue.kick(core: store.core)
             } catch {
                 self.error = String(describing: error)
             }
@@ -148,14 +148,14 @@ final class MainPanelViewModel: ObservableObject {
             error = nil
 
             if let item = items.first(where: { $0.id == id }), item.type == "image" {
-                let p = try core.getBlobPath(id: id)
+                let p = try repo.getBlobPath(id: id)
                 previewImage = NSImage(contentsOfFile: p)
                 previewText = previewImage == nil ? "(Failed to load image preview)" : ""
                 return
             }
 
             previewImage = nil
-            previewText = try core.getText(id: id)
+            previewText = try repo.getText(id: id)
         } catch {
             self.error = String(describing: error)
         }
@@ -168,18 +168,18 @@ final class MainPanelViewModel: ObservableObject {
             monitor.suppress(for: max(0.6, monitor.interval * 2))
 
             // Treat copy as "entering system clipboard" for ordering.
-            try core.touchLastCopied(id: id)
+            try repo.touchLastCopied(id: id)
 
             let pb = NSPasteboard.general
             pb.clearContents()
 
             if let item = items.first(where: { $0.id == id }), item.type == "image" {
-                let p = try core.getBlobPath(id: id)
+                let p = try repo.getBlobPath(id: id)
                 try writeImageToPasteboard(filePath: p)
                 return
             }
 
-            let text = try core.getText(id: id)
+            let text = try repo.getText(id: id)
             pb.setString(text, forType: .string)
 
             // Refresh ordering immediately.
@@ -196,14 +196,14 @@ final class MainPanelViewModel: ObservableObject {
             monitor.suppress(for: max(0.6, monitor.interval * 2))
 
             // Treat paste as "entering system clipboard" for ordering.
-            try core.touchLastCopied(id: id)
+            try repo.touchLastCopied(id: id)
 
             // Copy selected item to system clipboard.
             let pb = NSPasteboard.general
             pb.clearContents()
 
             if let item = items.first(where: { $0.id == id }), item.type == "image" {
-                let p = try core.getBlobPath(id: id)
+                let p = try repo.getBlobPath(id: id)
                 try writeImageToPasteboard(filePath: p)
                 NotificationCenter.default.post(
                     name: .clipboardToolPasteSelection,
@@ -214,7 +214,7 @@ final class MainPanelViewModel: ObservableObject {
                 return
             }
 
-            let text = try core.getText(id: id)
+            let text = try repo.getText(id: id)
             pb.setString(text, forType: .string)
 
             NotificationCenter.default.post(
@@ -233,7 +233,7 @@ final class MainPanelViewModel: ObservableObject {
 
     func addTestItem() {
         do {
-            try core.addText("test item @ \(Date())")
+            try repo.addText("test item @ \(Date())", sourceApp: nil)
             refresh()
         } catch {
             self.error = String(describing: error)
