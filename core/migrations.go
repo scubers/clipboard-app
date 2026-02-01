@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-const schemaVersion = 3
+const schemaVersion = 4
 
 func ensureSchema(db *sql.DB) error {
 	// Create meta table
@@ -59,6 +59,16 @@ func ensureSchema(db *sql.DB) error {
 		cur = 3
 		if _, err := db.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', '3')`); err != nil {
 			return fmt.Errorf("set schema_version v3: %w", err)
+		}
+	}
+
+	if cur < 4 {
+		if err := migrateToV4(db); err != nil {
+			return err
+		}
+		cur = 4
+		if _, err := db.Exec(`INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version', '4')`); err != nil {
+			return fmt.Errorf("set schema_version v4: %w", err)
 		}
 	}
 

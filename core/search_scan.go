@@ -16,7 +16,7 @@ func scanItemsToJSON(rows *sql.Rows, capHint int, outJSON **C.char) C.int {
 		var r itemRow
 		var source sql.NullString
 		var pinned int
-		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
+		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.LastCopiedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
 			setErr("scan: " + err.Error())
 			return ctErrDB
 		}

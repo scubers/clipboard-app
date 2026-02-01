@@ -56,12 +56,12 @@ func ct_items_search_json(corePtr *C.void, queryUTF8 *C.char, limit C.int, offse
 	if c.hasFTS5 {
 		ftsq := ftsQueryFromUserInput(q)
 		if ftsq != "" {
-			rows, err := db.Query(`SELECT items.id, items.created_at_ms, items.type, items.summary, items.source_app, items.pinned
+			rows, err := db.Query(`SELECT items.id, items.created_at_ms, items.last_copied_at_ms, items.type, items.summary, items.source_app, items.pinned
 				FROM items
 				JOIN items_fts ON items_fts.rowid = items.rowid
 				WHERE items.deleted_at_ms IS NULL
 				AND items_fts MATCH ?
-				ORDER BY items.pinned DESC, items.created_at_ms DESC
+				ORDER BY items.pinned DESC, items.last_copied_at_ms DESC, items.created_at_ms DESC
 				LIMIT ? OFFSET ?`, ftsq, l, o)
 			if err == nil {
 				defer rows.Close()
@@ -75,11 +75,11 @@ func ct_items_search_json(corePtr *C.void, queryUTF8 *C.char, limit C.int, offse
 	// NOTE: literal searching for '%' or '_' is not supported here.
 	pattern := "%" + q + "%"
 
-	rows, err := db.Query(`SELECT id, created_at_ms, type, summary, source_app, pinned
+	rows, err := db.Query(`SELECT id, created_at_ms, last_copied_at_ms, type, summary, source_app, pinned
 		FROM items
 		WHERE deleted_at_ms IS NULL
 		AND (text_content LIKE ? OR summary LIKE ?)
-		ORDER BY pinned DESC, created_at_ms DESC
+		ORDER BY pinned DESC, last_copied_at_ms DESC, created_at_ms DESC
 		LIMIT ? OFFSET ?`, pattern, pattern, l, o)
 	if err != nil {
 		setErr("search query: " + err.Error())

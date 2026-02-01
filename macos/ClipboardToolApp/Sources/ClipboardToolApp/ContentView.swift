@@ -53,7 +53,7 @@ struct ContentView: View {
                 List(vm.items, selection: $vm.selectedID) { item in
                     VStack(alignment: .leading, spacing: 4) {
                         Text((item.type == "image" ? "[img] " : "") + item.summary).lineLimit(2)
-                        Text(Date(timeIntervalSince1970: Double(item.createdAtMs) / 1000).formatted())
+                        Text(Date(timeIntervalSince1970: Double(item.lastCopiedAtMs) / 1000).formatted())
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

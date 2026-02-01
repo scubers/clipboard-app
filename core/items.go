@@ -27,12 +27,13 @@ const (
 )
 
 type itemRow struct {
-	ID          string  `json:"id"`
-	CreatedAtMs int64   `json:"createdAtMs"`
-	Type        string  `json:"type"`
-	Summary     string  `json:"summary"`
-	SourceApp   *string `json:"sourceApp"`
-	Pinned      bool    `json:"pinned"`
+	ID             string  `json:"id"`
+	CreatedAtMs    int64   `json:"createdAtMs"`
+	LastCopiedAtMs int64   `json:"lastCopiedAtMs"`
+	Type           string  `json:"type"`
+	Summary        string  `json:"summary"`
+	SourceApp      *string `json:"sourceApp"`
+	Pinned         bool    `json:"pinned"`
 }
 
 func canonicalizeText(s string) string {
@@ -148,12 +149,19 @@ func ct_items_add_text(corePtr *C.void, textUTF8 *C.char, sourceApp *C.char, cre
 		return ctErrDB
 	}
 
-	dup, err := isRecentDuplicate(db, hash, created)
-	if err != nil {
+	// De-dupe by content hash: if an item already exists, just bump last_copied_at_ms.
+	if existingID, ok, err := findExistingByHash(db, "text", hash); err != nil {
 		setErr("dedupe query: " + err.Error())
 		return ctErrDB
-	}
-	if dup {
+	} else if ok {
+		_, err := db.Exec(`UPDATE items SET last_copied_at_ms=?, deleted_at_ms=NULL WHERE id=?`, created, existingID)
+		if err != nil {
+			setErr("update last_copied: " + err.Error())
+			return ctErrDB
+		}
+		if outID != nil {
+			*outID = C.CString(existingID)
+		}
 		return ctOK
 	}
 
@@ -167,8 +175,8 @@ func ct_items_add_text(corePtr *C.void, textUTF8 *C.char, sourceApp *C.char, cre
 		}
 	}
 
-	_, err = db.Exec(`INSERT INTO items(id, created_at_ms, type, summary, text_content, content_hash, source_app, pinned, deleted_at_ms)
-		VALUES(?, ?, 'text', ?, ?, ?, ?, 0, NULL)`, id, created, summary, text, hash, src)
+	_, err = db.Exec(`INSERT INTO items(id, created_at_ms, last_copied_at_ms, type, summary, text_content, content_hash, source_app, pinned, deleted_at_ms)
+		VALUES(?, ?, ?, 'text', ?, ?, ?, ?, 0, NULL)`, id, created, created, summary, text, hash, src)
 	if err != nil {
 		setErr("insert item: " + err.Error())
 		return ctErrDB
@@ -226,12 +234,20 @@ func ct_items_add_image(corePtr *C.void, mimeC *C.char, dataPtr unsafe.Pointer, 
 		return ctErrDB
 	}
 
-	dup, err := isRecentDuplicate(db, hash, created)
-	if err != nil {
+	// De-dupe by content hash: if an item already exists, just bump last_copied_at_ms.
+	if existingID, ok, err := findExistingByHash(db, "image", hash); err != nil {
 		setErr("dedupe query: " + err.Error())
 		return ctErrDB
-	}
-	if dup {
+	} else if ok {
+		// Best-effort: keep existing blob file; just bump last_copied and revive.
+		_, err := db.Exec(`UPDATE items SET last_copied_at_ms=?, deleted_at_ms=NULL WHERE id=?`, created, existingID)
+		if err != nil {
+			setErr("update last_copied: " + err.Error())
+			return ctErrDB
+		}
+		if outID != nil {
+			*outID = C.CString(existingID)
+		}
 		return ctOK
 	}
 
@@ -266,8 +282,8 @@ func ct_items_add_image(corePtr *C.void, mimeC *C.char, dataPtr unsafe.Pointer, 
 		}
 	}
 
-	_, err = db.Exec(`INSERT INTO items(id, created_at_ms, type, summary, text_content, content_hash, source_app, pinned, deleted_at_ms, blob_path, mime, bytes, width, height)
-		VALUES(?, ?, 'image', ?, '', ?, ?, 0, NULL, ?, ?, ?, ?, ?)`, id, created, summary, hash, src, blobPath, mime, nbytes, w, h)
+	_, err = db.Exec(`INSERT INTO items(id, created_at_ms, last_copied_at_ms, type, summary, text_content, content_hash, source_app, pinned, deleted_at_ms, blob_path, mime, bytes, width, height)
+		VALUES(?, ?, ?, 'image', ?, '', ?, ?, 0, NULL, ?, ?, ?, ?, ?)`, id, created, created, summary, hash, src, blobPath, mime, nbytes, w, h)
 	if err != nil {
 		setErr("insert image item: " + err.Error())
 		return ctErrDB
@@ -360,7 +376,7 @@ func ct_items_list_json(corePtr *C.void, limit C.int, offset C.int, includeDelet
 		where += " AND deleted_at_ms IS NULL"
 	}
 
-	rows, err := db.Query(fmt.Sprintf(`SELECT id, created_at_ms, type, summary, source_app, pinned FROM items %s ORDER BY pinned DESC, created_at_ms DESC LIMIT ? OFFSET ?`, where), l, o)
+	rows, err := db.Query(fmt.Sprintf(`SELECT id, created_at_ms, last_copied_at_ms, type, summary, source_app, pinned FROM items %s ORDER BY pinned DESC, last_copied_at_ms DESC, created_at_ms DESC LIMIT ? OFFSET ?`, where), l, o)
 	if err != nil {
 		setErr("list query: " + err.Error())
 		return ctErrDB
@@ -372,7 +388,7 @@ func ct_items_list_json(corePtr *C.void, limit C.int, offset C.int, includeDelet
 		var r itemRow
 		var source sql.NullString
 		var pinned int
-		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
+		if err := rows.Scan(&r.ID, &r.CreatedAtMs, &r.LastCopiedAtMs, &r.Type, &r.Summary, &source, &pinned); err != nil {
 			setErr("list scan: " + err.Error())
 			return ctErrDB
 		}

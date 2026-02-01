@@ -63,12 +63,12 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 			if includeDeleted == 0 {
 				where += " AND items.deleted_at_ms IS NULL"
 			}
-			rows, err := db.Query(fmt.Sprintf(`SELECT items.id, items.created_at_ms, items.type, items.summary, items.source_app, items.pinned
+			rows, err := db.Query(fmt.Sprintf(`SELECT items.id, items.created_at_ms, items.last_copied_at_ms, items.type, items.summary, items.source_app, items.pinned
 				FROM items
 				JOIN items_fts ON items_fts.rowid = items.rowid
 				%s
 				AND items_fts MATCH ?
-				ORDER BY items.pinned DESC, items.created_at_ms DESC
+				ORDER BY items.pinned DESC, items.last_copied_at_ms DESC, items.created_at_ms DESC
 				LIMIT ? OFFSET ?`, where), ftsq, l, o)
 			if err == nil {
 				defer rows.Close()
@@ -86,10 +86,10 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 	}
 	where += " AND (text_content LIKE ? OR summary LIKE ?)"
 
-	rows, err := db.Query(fmt.Sprintf(`SELECT id, created_at_ms, type, summary, source_app, pinned
+	rows, err := db.Query(fmt.Sprintf(`SELECT id, created_at_ms, last_copied_at_ms, type, summary, source_app, pinned
 		FROM items
 		%s
-		ORDER BY pinned DESC, created_at_ms DESC
+		ORDER BY pinned DESC, last_copied_at_ms DESC, created_at_ms DESC
 		LIMIT ? OFFSET ?`, where), pattern, pattern, l, o)
 	if err != nil {
 		setErr("search query: " + err.Error())
