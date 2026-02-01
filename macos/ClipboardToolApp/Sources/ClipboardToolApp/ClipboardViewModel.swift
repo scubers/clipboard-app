@@ -4,7 +4,16 @@ import Foundation
 
 @MainActor
 final class ClipboardViewModel: ObservableObject {
-    @Published var items: [Item] = []
+    @Published private(set) var items: [Item] = []
+    @Published var filter: ItemFilter = .all {
+        didSet {
+            UserDefaults.standard.set(filter.rawValue, forKey: Keys.filter)
+            applyFilterAndSelection()
+        }
+    }
+
+    // Items after applying type filter (all/text/images)
+    @Published private(set) var filteredItems: [Item] = []
     @Published var query: String = ""
 
     private var queryCancellable: AnyCancellable?
@@ -40,6 +49,8 @@ final class ClipboardViewModel: ObservableObject {
     private enum Keys {
         static let previewWrap = "ClipboardTool.previewWrap"
         static let previewMonospace = "ClipboardTool.previewMonospace"
+        static let selectedID = "ClipboardTool.selectedID"
+        static let filter = "ClipboardTool.filter"
     }
 
     init() {
@@ -48,6 +59,15 @@ final class ClipboardViewModel: ObservableObject {
         }
         if UserDefaults.standard.object(forKey: Keys.previewMonospace) != nil {
             previewMonospace = UserDefaults.standard.bool(forKey: Keys.previewMonospace)
+        }
+
+        let savedFilter = UserDefaults.standard.integer(forKey: Keys.filter)
+        if let f = ItemFilter(rawValue: savedFilter) {
+            filter = f
+        }
+
+        if let sid = UserDefaults.standard.string(forKey: Keys.selectedID), !sid.isEmpty {
+            selectedID = sid
         }
 
         // Debounced search refresh while typing.
@@ -79,8 +99,31 @@ final class ClipboardViewModel: ObservableObject {
             } else {
                 items = try core.search(query)
             }
+            applyFilterAndSelection()
         } catch {
             self.error = String(describing: error)
+        }
+    }
+
+    private func applyFilterAndSelection() {
+        switch filter {
+        case .all:
+            filteredItems = items
+        case .text:
+            filteredItems = items.filter { $0.type == "text" }
+        case .images:
+            filteredItems = items.filter { $0.type == "image" }
+        }
+
+        // Keep selection stable if possible.
+        if let sel = selectedID, filteredItems.contains(where: { $0.id == sel }) {
+            // ok
+        } else {
+            selectedID = filteredItems.first?.id
+        }
+
+        if let sel = selectedID {
+            UserDefaults.standard.set(sel, forKey: Keys.selectedID)
         }
     }
 
@@ -96,6 +139,7 @@ final class ClipboardViewModel: ObservableObject {
             previewImage = nil
             return
         }
+        UserDefaults.standard.set(id, forKey: Keys.selectedID)
         do {
             error = nil
 

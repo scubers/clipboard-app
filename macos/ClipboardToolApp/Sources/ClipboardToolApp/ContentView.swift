@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var vm = ClipboardViewModel()
+    @StateObject private var appState = SharedAppState.shared
+
     @FocusState private var focus: FocusTarget?
 
     enum FocusTarget {
@@ -9,136 +11,183 @@ struct ContentView: View {
         case list
     }
 
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                TextField("Search", text: $vm.query)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focus, equals: .search)
-                    .onSubmit { vm.refresh() }
-                    .onKeyPress(.downArrow) {
-                        // Move focus to list and select first item for keyboard-only workflow.
-                        focus = .list
-                        if vm.selectedID == nil {
-                            vm.selectedID = vm.items.first?.id
-                        }
-                        return .handled
-                    }
-
-                Button("Refresh") { vm.refresh() }
-            }
-
-            HStack {
-                Toggle("Monitor", isOn: $vm.monitoringEnabled)
-                    .toggleStyle(.switch)
-
-                Spacer()
-
-                Text("Poll (ms)")
-                TextField("500", value: $vm.pollIntervalMs, format: .number)
-                    .frame(width: 72)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { vm.applyPollInterval() }
-
-                Button("Apply") { vm.applyPollInterval() }
-            }
-
-            if let err = vm.error {
-                Text(err)
-                    .foregroundStyle(.red)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            HStack(spacing: 12) {
-                List(vm.items, selection: $vm.selectedID) { item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text((item.type == "image" ? "[img] " : "") + item.summary).lineLimit(2)
-                        Text(Date(timeIntervalSince1970: Double(item.lastCopiedAtMs) / 1000).formatted())
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .focused($focus, equals: .list)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Preview")
-                            .font(.headline)
-                        Spacer()
-                        Toggle("Wrap", isOn: $vm.previewWrap)
-                        Toggle("Mono", isOn: $vm.previewMonospace)
-                    }
-
-                    if let img = vm.previewImage {
-                        ScrollView([.vertical, .horizontal]) {
-                            Image(nsImage: img)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 4)
-                                .padding(.bottom, 8)
-                        }
-                    } else {
-                        ScrollView([.vertical, vm.previewWrap ? [] : .horizontal]) {
-                            Text(vm.previewText)
-                                .font(vm.previewMonospace ? .system(.body, design: .monospaced) : .body)
-                                .frame(maxWidth: vm.previewWrap ? .infinity : nil, alignment: .leading)
-                                .fixedSize(horizontal: !vm.previewWrap, vertical: true)
-                                .textSelection(.enabled)
-                                .padding(.top, 4)
-                                .padding(.bottom, 8)
-                        }
-                    }
-
-                    Spacer()
-
-                    HStack {
-                        Button("Copy") { vm.copySelectedToPasteboard() }
-                            .disabled(vm.selectedID == nil)
-                            .keyboardShortcut("c", modifiers: [.command])
-
-                        // Press Enter to copy + paste into the previous app
-                        Button("", action: { vm.pasteSelectedToPreviousApp() })
-                            .keyboardShortcut(.return, modifiers: [])
-                            .opacity(0)
-                            .frame(width: 0, height: 0)
-                            .disabled(vm.selectedID == nil)
-
-                        Button("Add Test") { vm.addTestItem() }
-                    }
-                }
-                .frame(width: 280)
-            }
+    private var layoutIcon: String {
+        switch appState.previewLayout {
+        case .previewRight:
+            return "rectangle.righthalf.filled"
+        case .previewLeft:
+            return "rectangle.lefthalf.filled"
+        case .previewBottom:
+            return "rectangle.bottomhalf.filled"
         }
-        .padding(12)
+    }
+
+    var body: some View {
+        ZStack {
+            VisualEffectMaterial(material: .hudWindow, blendingMode: .behindWindow, state: .active)
+                .ignoresSafeArea()
+
+            VStack(spacing: 10) {
+                // Search row (no title bar in content)
+                HStack(spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "command")
+                            .foregroundStyle(.secondary)
+                        TextField("Search clipboard…", text: $vm.query)
+                            .textFieldStyle(.plain)
+                            .focused($focus, equals: .search)
+                            .onSubmit { vm.refresh() }
+                            .onKeyPress(.downArrow) {
+                                focus = .list
+                                if vm.selectedID == nil {
+                                    vm.selectedID = vm.filteredItems.first?.id
+                                }
+                                return .handled
+                            }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.primary.opacity(0.08)))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.10), lineWidth: 1))
+
+                    HStack(spacing: 8) {
+                        PillButton(title: "All", selected: vm.filter == .all) { vm.filter = .all }
+                        PillButton(title: "Text", selected: vm.filter == .text) { vm.filter = .text }
+                        PillButton(title: "Images", selected: vm.filter == .images) { vm.filter = .images }
+                    }
+
+                    Button {
+                        appState.previewLayout = appState.previewLayout.next
+                    } label: {
+                        Image(systemName: layoutIcon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.primary.opacity(0.08)))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primary.opacity(0.10), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Layout: \(appState.previewLayout.title) (cycle R → L → B)")
+                }
+
+                if let err = vm.error {
+                    Text(err)
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // Body
+                Group {
+                    switch appState.previewLayout {
+                    case .previewRight:
+                        HStack(spacing: 12) {
+                            listPane
+                            previewPane
+                                .frame(width: 300)
+                        }
+                    case .previewLeft:
+                        HStack(spacing: 12) {
+                            previewPane
+                                .frame(width: 300)
+                            listPane
+                        }
+                    case .previewBottom:
+                        VStack(spacing: 12) {
+                            listPane
+                            previewPane
+                                .frame(height: 190)
+                        }
+                    }
+                }
+
+                footer
+            }
+            .padding(12)
+        }
         .onAppear {
             vm.bootstrap()
             focus = .search
-            // Default selection for keyboard navigation.
-            if vm.selectedID == nil {
-                vm.selectedID = vm.items.first?.id
-            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
             focus = .search
-            // Each time the panel is activated, default-select the first item so
-            // Up/Down navigation works immediately.
-            if let first = vm.items.first?.id {
-                vm.selectedID = first
+            // Restore last viewed item (and scroll to it) on each open.
+            if vm.selectedID == nil {
+                vm.selectedID = vm.filteredItems.first?.id
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolItemsChanged)) { _ in
-            // Keep list live if the user isn't actively searching.
             if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 vm.refresh()
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolStorageChanged)) { _ in
-            // Switching shared data dir should always refresh (even while searching).
             vm.refresh()
         }
         .onChange(of: vm.selectedID) { _, _ in
             vm.loadPreview()
         }
+    }
+
+    private var listPane: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(vm.filteredItems) { item in
+                        ItemRowView(item: item, selected: vm.selectedID == item.id)
+                            .id(item.id)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                vm.selectedID = item.id
+                                focus = .list
+                            }
+                    }
+                }
+                .padding(2)
+            }
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.primary.opacity(0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.primary.opacity(0.08), lineWidth: 1))
+            .onChange(of: vm.selectedID) { _, newValue in
+                guard let id = newValue else { return }
+                withAnimation(.easeOut(duration: 0.12)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
+                // When reopening, restore to last selected item (our proxy for scroll position).
+                if let id = vm.selectedID {
+                    DispatchQueue.main.async {
+                        proxy.scrollTo(id, anchor: .center)
+                    }
+                }
+            }
+        }
+        .focused($focus, equals: .list)
+    }
+
+    private var previewPane: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Toggle("Wrap", isOn: $vm.previewWrap)
+                    .toggleStyle(.switch)
+                Toggle("Mono", isOn: $vm.previewMonospace)
+                    .toggleStyle(.switch)
+                Spacer()
+            }
+            .font(.system(size: 12))
+            .foregroundStyle(.secondary)
+
+            PreviewCardView(vm: vm)
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            Text("↑↓ select · ⌘↵ paste · ⌘C copy")
+            Spacer()
+            Text("\(vm.filteredItems.count) items")
+        }
+        .font(.system(size: 12))
+        .foregroundStyle(.secondary)
+        .padding(.top, 2)
     }
 }

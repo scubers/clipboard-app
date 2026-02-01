@@ -11,6 +11,11 @@ final class SharedAppState: ObservableObject {
 
     @Published private(set) var sharedDataDir: String = AppPaths.effectiveSharedDir().path
 
+    // UI layout (persisted via UserDefaults)
+    @Published var previewLayout: PreviewLayout = .previewRight {
+        didSet { UserDefaults.standard.set(previewLayout.rawValue, forKey: Keys.previewLayout) }
+    }
+
     // Settings (persisted via UserDefaults)
     @Published var pollIntervalMs: Double = 500 {
         didSet { UserDefaults.standard.set(pollIntervalMs, forKey: Keys.pollIntervalMs) }
@@ -22,6 +27,7 @@ final class SharedAppState: ObservableObject {
     private enum Keys {
         static let pollIntervalMs = "ClipboardTool.pollIntervalMs"
         static let monitoringEnabled = "ClipboardTool.monitoringEnabled"
+        static let previewLayout = "ClipboardTool.previewLayout"
     }
 
     private init() {
@@ -36,6 +42,11 @@ final class SharedAppState: ObservableObject {
         }
         if UserDefaults.standard.object(forKey: Keys.monitoringEnabled) != nil {
             monitoringEnabled = UserDefaults.standard.bool(forKey: Keys.monitoringEnabled)
+        }
+
+        let savedLayout = UserDefaults.standard.integer(forKey: Keys.previewLayout)
+        if let l = PreviewLayout(rawValue: savedLayout) {
+            previewLayout = l
         }
 
         applyPollInterval()

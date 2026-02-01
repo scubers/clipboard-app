@@ -7,11 +7,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: NSPanel?
     private var localKeyMonitor: Any?
     private var appDeactivateObserver: Any?
+    private var panelMoveObserver: Any?
+    private var panelResizeObserver: Any?
 
     private var previousApp: NSRunningApplication?
     private var previousAppPID: pid_t?
 
     private let hotkey = HotkeyManager.shared
+
+    private enum Keys {
+        static let panelFrame = "ClipboardTool.panelFrame"
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Menu-bar utility behavior
@@ -82,14 +88,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let hosting = NSHostingController(rootView: view)
 
             let p = NSPanel(contentViewController: hosting)
-            p.title = "ClipboardTool"
-            // Slightly wider than tall feels more like a clipboard popover.
-            p.setContentSize(NSSize(width: 640, height: 520))
-            p.styleMask = [.titled, .closable, .resizable, .utilityWindow]
+            // Popover-like, minimal chrome.
+            p.title = ""
+            p.titleVisibility = .hidden
+            p.titlebarAppearsTransparent = true
+            p.isMovableByWindowBackground = true
+            p.isOpaque = false
+            p.backgroundColor = .clear
+
+            // Slightly wider than tall, Raycast-like.
+            p.setContentSize(NSSize(width: 760, height: 520))
+            p.styleMask = [.titled, .closable, .resizable, .utilityWindow, .fullSizeContentView]
             p.isReleasedWhenClosed = false
             p.level = .floating
             p.collectionBehavior = [.moveToActiveSpace]
             p.hidesOnDeactivate = true
+
+            // Persist window frame.
+            observePanelFrame(p)
+
+            // Apply last saved frame (or default placement).
+            applyInitialPanelPlacement(p)
 
             // ESC to close
             localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak p] event in
@@ -105,22 +124,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel else { return }
 
-        // Position near status item button if possible (popover-like).
-        if let button = statusItem.button,
-           let btnWindow = button.window,
-           let screen = btnWindow.screen {
-            let btnFrameInScreen = btnWindow.convertToScreen(button.frame)
-            let vf = screen.visibleFrame
-
-            var x = btnFrameInScreen.midX - panel.frame.width / 2
-            var y = btnFrameInScreen.minY - panel.frame.height - 8
-
-            // Clamp to visible screen.
-            x = max(vf.minX + 8, min(x, vf.maxX - panel.frame.width - 8))
-            y = max(vf.minY + 8, min(y, vf.maxY - panel.frame.height - 8))
-
-            panel.setFrameOrigin(NSPoint(x: x, y: y))
-        }
+        // Placement is handled by applyInitialPanelPlacement(p) when the panel is created.
+        // On subsequent opens we keep last position; no need to reposition near status item.
 
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
@@ -210,12 +215,65 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func applyInitialPanelPlacement(_ panel: NSPanel) {
+        if let s = UserDefaults.standard.string(forKey: Keys.panelFrame) {
+            let rect = NSRectFromString(s)
+            if rect.width > 0, rect.height > 0 {
+                panel.setFrame(rect, display: false)
+                return
+            }
+        }
+
+        // First open: current screen (by mouse position), centered slightly top.
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main
+        guard let screen else { return }
+        let vf = screen.visibleFrame
+        let size = panel.frame.size
+
+        let x = vf.midX - size.width / 2
+        // "Slightly top": shift up by ~12% of visible height.
+        let y = vf.midY + vf.height * 0.12 - size.height / 2
+
+        panel.setFrameOrigin(NSPoint(x: max(vf.minX + 8, min(x, vf.maxX - size.width - 8)),
+                                    y: max(vf.minY + 8, min(y, vf.maxY - size.height - 8))))
+    }
+
+    private func observePanelFrame(_ panel: NSPanel) {
+        panelMoveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            self?.savePanelFrame(panel)
+        }
+
+        panelResizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didEndLiveResizeNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            self?.savePanelFrame(panel)
+        }
+    }
+
+    private func savePanelFrame(_ panel: NSPanel) {
+        let rect = panel.frame
+        UserDefaults.standard.set(NSStringFromRect(rect), forKey: Keys.panelFrame)
+    }
+
     @objc private func quit() {
         if let localKeyMonitor {
             NSEvent.removeMonitor(localKeyMonitor)
         }
         if let appDeactivateObserver {
             NotificationCenter.default.removeObserver(appDeactivateObserver)
+        }
+        if let panelMoveObserver {
+            NotificationCenter.default.removeObserver(panelMoveObserver)
+        }
+        if let panelResizeObserver {
+            NotificationCenter.default.removeObserver(panelResizeObserver)
         }
         NSApp.terminate(nil)
     }
