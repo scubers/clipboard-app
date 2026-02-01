@@ -9,17 +9,26 @@
 /* Begin PBXBuildFile section */
 		049CDA98FD2A243FC7A45625 /* PreviewSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC445A06A2C652C0853CB0C3 /* PreviewSettings.swift */; };
 		1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0714EBB2913B26EBA9A3D27 /* ExportImportView.swift */; };
+		126E0254E09309AAAA3A42E0 /* MainPanelListPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF5D8AF0618AC8E3245C06E /* MainPanelListPane.swift */; };
 		1588BA02AD306AC34D6B2A91 /* PasteboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F8BC899F7F5FE4CD0E97A1 /* PasteboardMonitor.swift */; };
+		2C192C7488484528D1C0BA6D /* PreviewSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3857907E192E9BAD4D047E /* PreviewSettingsPage.swift */; };
 		30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */; };
 		3816359B17BA11D81FDC7D3A /* WindowChromeTuner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53EE5E60E10FE7626A05C2FF /* WindowChromeTuner.swift */; };
 		394CB19379081E12F02529FF /* MacOSConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F17AF90735A2ACECB0A09B2 /* MacOSConfigStore.swift */; };
 		43B0C10D89B0FFC659B62D69 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEA7E73B7EACB1B67A8F809 /* AppNotifications.swift */; };
+		44DC91BB83178829B21F39B0 /* GeneralSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2930CBD82561908EEE1446A3 /* GeneralSettingsPage.swift */; };
 		461FA2810E1743032A6BE099 /* AppRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618614560524FACC30B08027 /* AppRelauncher.swift */; };
+		46FE378C22CFBFC6F9568E13 /* ShortcutsSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 588545BAB365AE4288F18351 /* ShortcutsSettingsPage.swift */; };
 		473A71ED932CDDA7512710FE /* CoreClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB67BE9FDD66B531990C42F /* CoreClient.swift */; };
 		4F3368450DEFE2D2CBD7B87E /* HotkeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E36DA9B2314E3D71E8DD58A /* HotkeyRecorder.swift */; };
 		5167CC7FFF439445DC2DF6FC /* ClipboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */; };
 		5CB99600215CF0984AAC632E /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C6461DC065611310C5BC4F9 /* Item.swift */; };
+		5F39A6150133CACCCBC17843 /* StorageSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EF10B1BEF7A1F2BD79C244 /* StorageSettingsPage.swift */; };
 		648FF37CFAB721D719CC96A1 /* ClipboardToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963A1CCCCCE66388EBCEB6B7 /* ClipboardToolApp.swift */; };
+		649DB77AED3C64F0FEB9D56F /* SettingsSidebarRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3431E893278279154F87BB2D /* SettingsSidebarRow.swift */; };
+		6546F254686C0E7D2A29AFF9 /* MainPanelPreviewPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E958432422909369CF86B /* MainPanelPreviewPane.swift */; };
+		66050F5D9D2D19606FA69BFB /* MainPanelFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4445A65E70C97CB5616F2B /* MainPanelFooter.swift */; };
+		6E72FBC8E448CCED6E3ED9A9 /* AdvancedSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5840C01AAA4417F0FAD68497 /* AdvancedSettingsPage.swift */; };
 		7B6218BBA7547C91266474AC /* SettingsSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */; };
 		85601B9815B5A502BDCB20B8 /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783E9586914BEFFDD2C96A9C /* ItemRowView.swift */; };
 		895DB92D7E66B13B551CC4C3 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB6AC54A588B60015F922EB6 /* AppStore.swift */; };
@@ -27,9 +36,11 @@
 		8D53A42F0684E642CC6B8471 /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8768EA85A0154395330C46 /* OCRService.swift */; };
 		94C5B4ED0BD58AAEBC481D61 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86616C1040958DF343F1CCB5 /* LaunchAtLoginManager.swift */; };
 		97FF8CE2575B05C593133396 /* UIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C5E7D41D792D51E611DECB /* UIModels.swift */; };
+		A52A086D8A2B53BFD979F60D /* MainPanelBody.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB214F16897BCEF72EC9191 /* MainPanelBody.swift */; };
 		A766ABB8511F908782E130FC /* Stats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799B51F5EF2B13042BD197C3 /* Stats.swift */; };
 		A890F8BC5609DD5C2E6423D4 /* PreviewCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D610083487C1E6BA03AB67 /* PreviewCardView.swift */; };
 		AF895CF5D64C315B5031FEA4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E0616AB0386D028D29F4DC0 /* AppDelegate.swift */; };
+		B10B230503218079486FBEB0 /* CaptureSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06C6B674E243CEC8CABAF8D /* CaptureSettingsPage.swift */; };
 		B1247131FE19660A6C8578B7 /* SettingsUIComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F45E5FDFA5DF994E20D792 /* SettingsUIComponents.swift */; };
 		B1457BC6DFBB8E93385B7485 /* PanelCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57097131149F86E2D07FC77 /* PanelCoordinator.swift */; };
 		B3C8CBA7C23D4FB09A4D42DA /* HotkeySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE362786F450EB9CED01623 /* HotkeySettingsView.swift */; };
@@ -38,9 +49,11 @@
 		C880915589105E3D335AAB1B /* IntegrityResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74321B4BB326E799BBF3A3E0 /* IntegrityResult.swift */; };
 		CAB7A46434BB41B18875A49E /* HotkeyCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27DF1341FE4C4E6FF32FAE3 /* HotkeyCapture.swift */; };
 		CD3EC2021ED410541BD8B78B /* VisualEffectMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851EA549331DEE8F76F38EEA /* VisualEffectMaterial.swift */; };
+		CF49AC9CA2B2527AADACA568 /* MainPanelSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8AC49E2A83DE7FF7A1B849 /* MainPanelSearchBar.swift */; };
 		D13958774EB6C1E2E946F4C6 /* SettingsPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DD89BCACF9DC5005B1C89BC /* SettingsPages.swift */; };
 		D23A32A69F4470E5A02AE3A4 /* PillButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB9A3617F0B1B2D386481B4 /* PillButton.swift */; };
 		D87F5ECE9DACBB222214E744 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38DD235D10F32FBF5FB11F4D /* AppPaths.swift */; };
+		DAE7BF51792F1AF8C7D7E098 /* AppearanceSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 959BB93D4E8F2F44542E6F2C /* AppearanceSettingsPage.swift */; };
 		EBA7938469728072FCEAF2B2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A545BB2494BBAAADDE3C1D7B /* ContentView.swift */; };
 		EE08ACD223112F0795C5EB26 /* CoreBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61FEB3E7CF2DAB55C0CE10C5 /* CoreBridge.swift */; };
 		EFF5052210ABB48A94DF5DAF /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0AED220E85ED339A70B5B1 /* SettingsViewModel.swift */; };
@@ -48,21 +61,28 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0AB214F16897BCEF72EC9191 /* MainPanelBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelBody.swift; sourceTree = "<group>"; };
+		0AF5D8AF0618AC8E3245C06E /* MainPanelListPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelListPane.swift; sourceTree = "<group>"; };
 		0FB9A3617F0B1B2D386481B4 /* PillButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillButton.swift; sourceTree = "<group>"; };
 		17F45E5FDFA5DF994E20D792 /* SettingsUIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUIComponents.swift; sourceTree = "<group>"; };
 		21F8BC899F7F5FE4CD0E97A1 /* PasteboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardMonitor.swift; sourceTree = "<group>"; };
 		260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreClipboardRepository.swift; sourceTree = "<group>"; };
+		2930CBD82561908EEE1446A3 /* GeneralSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsPage.swift; sourceTree = "<group>"; };
 		2DD89BCACF9DC5005B1C89BC /* SettingsPages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPages.swift; sourceTree = "<group>"; };
 		2DE362786F450EB9CED01623 /* HotkeySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeySettingsView.swift; sourceTree = "<group>"; };
 		33D610083487C1E6BA03AB67 /* PreviewCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewCardView.swift; sourceTree = "<group>"; };
+		3431E893278279154F87BB2D /* SettingsSidebarRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSidebarRow.swift; sourceTree = "<group>"; };
 		34AA1D81494529E932E79B73 /* ClipboardTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipboardTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38DD235D10F32FBF5FB11F4D /* AppPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPaths.swift; sourceTree = "<group>"; };
 		4CB67B95E6D031BA58E851D4 /* OCRQueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRQueueManager.swift; sourceTree = "<group>"; };
 		4F17AF90735A2ACECB0A09B2 /* MacOSConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSConfigStore.swift; sourceTree = "<group>"; };
 		53EE5E60E10FE7626A05C2FF /* WindowChromeTuner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowChromeTuner.swift; sourceTree = "<group>"; };
+		5840C01AAA4417F0FAD68497 /* AdvancedSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsPage.swift; sourceTree = "<group>"; };
+		588545BAB365AE4288F18351 /* ShortcutsSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSettingsPage.swift; sourceTree = "<group>"; };
 		5E8768EA85A0154395330C46 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		618614560524FACC30B08027 /* AppRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelauncher.swift; sourceTree = "<group>"; };
 		61FEB3E7CF2DAB55C0CE10C5 /* CoreBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBridge.swift; sourceTree = "<group>"; };
+		6A8AC49E2A83DE7FF7A1B849 /* MainPanelSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelSearchBar.swift; sourceTree = "<group>"; };
 		6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardRepository.swift; sourceTree = "<group>"; };
 		6E36DA9B2314E3D71E8DD58A /* HotkeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorder.swift; sourceTree = "<group>"; };
 		701834DF515D28FF91EEB479 /* MainPanelViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelViewModel.swift; sourceTree = "<group>"; };
@@ -72,12 +92,18 @@
 		7C6461DC065611310C5BC4F9 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		81686412C3929A12DAD566D6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		851EA549331DEE8F76F38EEA /* VisualEffectMaterial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectMaterial.swift; sourceTree = "<group>"; };
+		85EF10B1BEF7A1F2BD79C244 /* StorageSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSettingsPage.swift; sourceTree = "<group>"; };
 		86616C1040958DF343F1CCB5 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 		87AFF5842827C087C4845F1B /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		8C4445A65E70C97CB5616F2B /* MainPanelFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelFooter.swift; sourceTree = "<group>"; };
+		959BB93D4E8F2F44542E6F2C /* AppearanceSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsPage.swift; sourceTree = "<group>"; };
 		963A1CCCCCE66388EBCEB6B7 /* ClipboardToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardToolApp.swift; sourceTree = "<group>"; };
 		9E0616AB0386D028D29F4DC0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9F3857907E192E9BAD4D047E /* PreviewSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSettingsPage.swift; sourceTree = "<group>"; };
+		9F4E958432422909369CF86B /* MainPanelPreviewPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelPreviewPane.swift; sourceTree = "<group>"; };
 		A0714EBB2913B26EBA9A3D27 /* ExportImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportImportView.swift; sourceTree = "<group>"; };
 		A545BB2494BBAAADDE3C1D7B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B06C6B674E243CEC8CABAF8D /* CaptureSettingsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureSettingsPage.swift; sourceTree = "<group>"; };
 		BCB67BE9FDD66B531990C42F /* CoreClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreClient.swift; sourceTree = "<group>"; };
 		C57097131149F86E2D07FC77 /* PanelCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCoordinator.swift; sourceTree = "<group>"; };
 		CC445A06A2C652C0853CB0C3 /* PreviewSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSettings.swift; sourceTree = "<group>"; };
@@ -201,6 +227,18 @@
 			path = Domain;
 			sourceTree = "<group>";
 		};
+		6003355FE4D3A45E06C96E9B /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				0AB214F16897BCEF72EC9191 /* MainPanelBody.swift */,
+				8C4445A65E70C97CB5616F2B /* MainPanelFooter.swift */,
+				0AF5D8AF0618AC8E3245C06E /* MainPanelListPane.swift */,
+				9F4E958432422909369CF86B /* MainPanelPreviewPane.swift */,
+				6A8AC49E2A83DE7FF7A1B849 /* MainPanelSearchBar.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		6335F967BA97F8E7EF940F59 = {
 			isa = PBXGroup;
 			children = (
@@ -223,6 +261,7 @@
 				A545BB2494BBAAADDE3C1D7B /* ContentView.swift */,
 				783E9586914BEFFDD2C96A9C /* ItemRowView.swift */,
 				33D610083487C1E6BA03AB67 /* PreviewCardView.swift */,
+				6003355FE4D3A45E06C96E9B /* Components */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -259,8 +298,32 @@
 				2DD89BCACF9DC5005B1C89BC /* SettingsPages.swift */,
 				EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */,
 				81686412C3929A12DAD566D6 /* SettingsView.swift */,
+				A54CD83EA2269479747BAECC /* Components */,
+				B1DF850BF03BE5449F4F93C1 /* Pages */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A54CD83EA2269479747BAECC /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				3431E893278279154F87BB2D /* SettingsSidebarRow.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		B1DF850BF03BE5449F4F93C1 /* Pages */ = {
+			isa = PBXGroup;
+			children = (
+				5840C01AAA4417F0FAD68497 /* AdvancedSettingsPage.swift */,
+				959BB93D4E8F2F44542E6F2C /* AppearanceSettingsPage.swift */,
+				B06C6B674E243CEC8CABAF8D /* CaptureSettingsPage.swift */,
+				2930CBD82561908EEE1446A3 /* GeneralSettingsPage.swift */,
+				9F3857907E192E9BAD4D047E /* PreviewSettingsPage.swift */,
+				588545BAB365AE4288F18351 /* ShortcutsSettingsPage.swift */,
+				85EF10B1BEF7A1F2BD79C244 /* StorageSettingsPage.swift */,
+			);
+			path = Pages;
 			sourceTree = "<group>";
 		};
 		B784D75800D3E0C3D9B39F7D /* App */ = {
@@ -462,11 +525,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E72FBC8E448CCED6E3ED9A9 /* AdvancedSettingsPage.swift in Sources */,
 				AF895CF5D64C315B5031FEA4 /* AppDelegate.swift in Sources */,
 				43B0C10D89B0FFC659B62D69 /* AppNotifications.swift in Sources */,
 				D87F5ECE9DACBB222214E744 /* AppPaths.swift in Sources */,
 				461FA2810E1743032A6BE099 /* AppRelauncher.swift in Sources */,
 				895DB92D7E66B13B551CC4C3 /* AppStore.swift in Sources */,
+				DAE7BF51792F1AF8C7D7E098 /* AppearanceSettingsPage.swift in Sources */,
+				B10B230503218079486FBEB0 /* CaptureSettingsPage.swift in Sources */,
 				5167CC7FFF439445DC2DF6FC /* ClipboardRepository.swift in Sources */,
 				648FF37CFAB721D719CC96A1 /* ClipboardToolApp.swift in Sources */,
 				EBA7938469728072FCEAF2B2 /* ContentView.swift in Sources */,
@@ -474,6 +540,7 @@
 				473A71ED932CDDA7512710FE /* CoreClient.swift in Sources */,
 				30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */,
 				1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */,
+				44DC91BB83178829B21F39B0 /* GeneralSettingsPage.swift in Sources */,
 				CAB7A46434BB41B18875A49E /* HotkeyCapture.swift in Sources */,
 				F957A0E3EFE858B5CC4D3CB0 /* HotkeyManager.swift in Sources */,
 				4F3368450DEFE2D2CBD7B87E /* HotkeyRecorder.swift in Sources */,
@@ -483,6 +550,11 @@
 				85601B9815B5A502BDCB20B8 /* ItemRowView.swift in Sources */,
 				94C5B4ED0BD58AAEBC481D61 /* LaunchAtLoginManager.swift in Sources */,
 				394CB19379081E12F02529FF /* MacOSConfigStore.swift in Sources */,
+				A52A086D8A2B53BFD979F60D /* MainPanelBody.swift in Sources */,
+				66050F5D9D2D19606FA69BFB /* MainPanelFooter.swift in Sources */,
+				126E0254E09309AAAA3A42E0 /* MainPanelListPane.swift in Sources */,
+				6546F254686C0E7D2A29AFF9 /* MainPanelPreviewPane.swift in Sources */,
+				CF49AC9CA2B2527AADACA568 /* MainPanelSearchBar.swift in Sources */,
 				8CA712CEEB44728C96338398 /* MainPanelViewModel.swift in Sources */,
 				B8D4AAF54F0764E2CAE21BFE /* OCRQueueManager.swift in Sources */,
 				8D53A42F0684E642CC6B8471 /* OCRService.swift in Sources */,
@@ -491,12 +563,16 @@
 				D23A32A69F4470E5A02AE3A4 /* PillButton.swift in Sources */,
 				A890F8BC5609DD5C2E6423D4 /* PreviewCardView.swift in Sources */,
 				049CDA98FD2A243FC7A45625 /* PreviewSettings.swift in Sources */,
+				2C192C7488484528D1C0BA6D /* PreviewSettingsPage.swift in Sources */,
 				D13958774EB6C1E2E946F4C6 /* SettingsPages.swift in Sources */,
+				649DB77AED3C64F0FEB9D56F /* SettingsSidebarRow.swift in Sources */,
 				7B6218BBA7547C91266474AC /* SettingsSidebarView.swift in Sources */,
 				B1247131FE19660A6C8578B7 /* SettingsUIComponents.swift in Sources */,
 				B83EF28DA0100C429564BC33 /* SettingsView.swift in Sources */,
 				EFF5052210ABB48A94DF5DAF /* SettingsViewModel.swift in Sources */,
+				46FE378C22CFBFC6F9568E13 /* ShortcutsSettingsPage.swift in Sources */,
 				A766ABB8511F908782E130FC /* Stats.swift in Sources */,
+				5F39A6150133CACCCBC17843 /* StorageSettingsPage.swift in Sources */,
 				97FF8CE2575B05C593133396 /* UIModels.swift in Sources */,
 				CD3EC2021ED410541BD8B78B /* VisualEffectMaterial.swift in Sources */,
 				3816359B17BA11D81FDC7D3A /* WindowChromeTuner.swift in Sources */,
