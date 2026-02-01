@@ -17,11 +17,11 @@ struct MainPanelBody: View {
             let h = geo.size.height
 
             // 60/40 split (list/preview)
-            let listW = max(240, (w - spacing) * 0.60)
-            let previewW = max(240, (w - spacing) * 0.40)
+            let listW = max(240, (w - spacing) * 0.50)
+            let previewW = max(240, (w - spacing) * 0.50)
 
-            let listH = max(160, (h - spacing) * 0.60)
-            let previewH = max(160, (h - spacing) * 0.40)
+            let listH = max(160, (h - spacing) * 0.50)
+            let previewH = max(160, (h - spacing) * 0.50)
 
             Group {
                 switch store.previewLayout {
