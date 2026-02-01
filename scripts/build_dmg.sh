@@ -29,7 +29,19 @@ mkdir -p "$DMG_ROOT"
 
 echo "[build] tag=${TAG} version=${VERSION}"
 
-# 1) Build SwiftPM release executable
+# 1) Build Go core dylib (required for Swift linking)
+echo "[core] building Go dylib"
+"$ROOT_DIR/scripts/build_core.sh"
+
+# Sync core artifacts into SwiftPM vendor folder
+mkdir -p "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core"
+cp -f "$ROOT_DIR/core/build/libclipboardtool.dylib" "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core/libclipboardtool.dylib"
+cp -f "$ROOT_DIR/core/build/clipboardtool.h" "$ROOT_DIR/macos/ClipboardToolApp/Vendor/core/clipboardtool.h"
+
+# Ensure SwiftPM Resources path exists (Package.swift references ../../Resources).
+mkdir -p "$ROOT_DIR/macos/ClipboardToolApp/Resources"
+
+# 2) Build SwiftPM release executable
 pushd "$APP_SPM_DIR" >/dev/null
 swift --version
 swift build -c release
@@ -45,7 +57,7 @@ if [[ ! -f "$BIN_SRC" ]]; then
 fi
 popd >/dev/null
 
-# 2) Assemble .app bundle
+# 3) Assemble .app bundle
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 
