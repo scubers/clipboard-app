@@ -124,6 +124,10 @@ struct ContentView: View {
                 vm.refresh()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolStorageChanged)) { _ in
+            // Switching shared data dir should always refresh (even while searching).
+            vm.refresh()
+        }
         .onChange(of: vm.selectedID) { _, _ in
             vm.loadPreview()
         }

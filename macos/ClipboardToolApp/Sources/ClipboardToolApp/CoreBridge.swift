@@ -93,10 +93,7 @@ final class CoreClient {
     fileprivate var core: UnsafeMutableRawPointer?
 
     deinit {
-        if core != nil {
-            _ = ct_core_close(core)
-            core = nil
-        }
+        close()
     }
 
     func open(dataDir: String) throws {
@@ -109,6 +106,19 @@ final class CoreClient {
             throw CoreError.rc(rc, Self.lastError())
         }
         core = ptr
+    }
+
+    func close() {
+        if core != nil {
+            _ = ct_core_close(core)
+            core = nil
+        }
+    }
+
+    /// Close and reopen core with a new shared data directory.
+    func reopen(dataDir: String) throws {
+        close()
+        try open(dataDir: dataDir)
     }
 
     func list(limit: Int32 = 200, offset: Int32 = 0) throws -> [Item] {

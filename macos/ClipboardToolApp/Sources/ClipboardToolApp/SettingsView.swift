@@ -13,17 +13,62 @@ struct SettingsView: View {
         Form {
             Section("Storage") {
                 HStack {
-                    Text("Data directory")
+                    Text("Local config")
                     Spacer()
-                    Text(ClipboardViewModel.defaultDataDir)
+                    Text(AppPaths.localBaseDir.path)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
 
-                Button("Open Data Folder") {
-                    NSWorkspace.shared.open(URL(fileURLWithPath: ClipboardViewModel.defaultDataDir, isDirectory: true))
+                HStack {
+                    Text("Shared data directory")
+                    Spacer()
+                    Text(state.sharedDataDir)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                 }
+
+                HStack(spacing: 8) {
+                    Button("Choose…") {
+                        let p = NSOpenPanel()
+                        p.canChooseFiles = false
+                        p.canChooseDirectories = true
+                        p.allowsMultipleSelection = false
+                        p.prompt = "Use This Folder"
+                        p.message = "Choose a folder to store shared config & data. Put it in a cloud-synced folder (e.g. iCloud Drive) to sync across devices."
+                        p.directoryURL = URL(fileURLWithPath: state.sharedDataDir, isDirectory: true)
+
+                        if p.runModal() == .OK, let url = p.url {
+                            do {
+                                try state.reloadSharedDataDir(url.path)
+                            } catch {
+                                self.error = String(describing: error)
+                            }
+                        }
+                    }
+
+                    Button("Reset") {
+                        do {
+                            // Reset by saving default path.
+                            try AppPaths.setSharedDir(AppPaths.defaultSharedBaseDir)
+                            try state.reloadSharedDataDir(AppPaths.defaultSharedBaseDir.path)
+                        } catch {
+                            self.error = String(describing: error)
+                        }
+                    }
+
+                    Spacer()
+
+                    Button("Open Shared Folder") {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: state.sharedDataDir, isDirectory: true))
+                    }
+                }
+
+                Text("Tip: set Shared data directory to a cloud-synced folder to enable cross-device sync.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             HotkeySettingsView()

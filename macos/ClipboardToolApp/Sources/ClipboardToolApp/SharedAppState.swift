@@ -9,6 +9,8 @@ final class SharedAppState: ObservableObject {
     let core = CoreClient()
     let monitor = PasteboardMonitor(interval: 0.5)
 
+    @Published private(set) var sharedDataDir: String = AppPaths.effectiveSharedDir().path
+
     // Settings (persisted via UserDefaults)
     @Published var pollIntervalMs: Double = 500 {
         didSet { UserDefaults.standard.set(pollIntervalMs, forKey: Keys.pollIntervalMs) }
@@ -23,8 +25,10 @@ final class SharedAppState: ObservableObject {
     }
 
     private init() {
-        // Best-effort open
-        try? core.open(dataDir: ClipboardViewModel.defaultDataDir)
+        // Best-effort open with shared dir (configurable via local config).
+        let dir = AppPaths.effectiveSharedDir().path
+        sharedDataDir = dir
+        try? core.open(dataDir: dir)
 
         let savedMs = UserDefaults.standard.double(forKey: Keys.pollIntervalMs)
         if savedMs > 0 {
@@ -41,6 +45,23 @@ final class SharedAppState: ObservableObject {
         let ms = max(100, min(2000, pollIntervalMs))
         pollIntervalMs = ms
         monitor.interval = ms / 1000.0
+    }
+
+    func reloadSharedDataDir(_ newDir: String) throws {
+        let trimmed = newDir.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        // Persist to local config.
+        let url = URL(fileURLWithPath: (trimmed as NSString).expandingTildeInPath, isDirectory: true)
+        try AppPaths.setSharedDir(url)
+
+        // Reopen core against the new directory.
+        try core.reopen(dataDir: url.path)
+        sharedDataDir = url.path
+
+        // Tell UI to refresh.
+        NotificationCenter.default.post(name: .clipboardToolStorageChanged, object: nil)
+        NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
     }
 
     func startMonitoring() {

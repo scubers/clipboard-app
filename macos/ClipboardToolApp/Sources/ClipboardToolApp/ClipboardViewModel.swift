@@ -62,7 +62,9 @@ final class ClipboardViewModel: ObservableObject {
 
     func bootstrap() {
         do {
-            try core.open(dataDir: Self.defaultDataDir)
+            // Core is opened by SharedAppState on app start; but if something failed,
+            // try again using the current shared data dir.
+            try core.open(dataDir: SharedAppState.shared.sharedDataDir)
             refresh()
         } catch {
             self.error = String(describing: error)
@@ -212,9 +214,8 @@ final class ClipboardViewModel: ObservableObject {
         pb.writeObjects([item])
     }
 
+    // Back-compat: some UI surfaces reference this. Prefer SharedAppState.shared.sharedDataDir.
     static var defaultDataDir: String {
-        let base = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/ClipboardTool", isDirectory: true)
-        return base.path
+        AppPaths.effectiveSharedDir().path
     }
 }
