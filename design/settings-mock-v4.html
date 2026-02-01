@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClipboardTool Settings Mock v4 (Final tweaks)</title>
+  <style>
+    :root {
+      --bg0: #f5f5f7;
+      --mat1: rgba(255,255,255,0.72);
+      --mat2: rgba(255,255,255,0.48);
+      --stroke: rgba(0,0,0,0.10);
+      --text0: rgba(0,0,0,0.90);
+      --text1: rgba(0,0,0,0.60);
+      --text2: rgba(0,0,0,0.42);
+      --shadow: 0 18px 60px rgba(0,0,0,0.14);
+      --accent: #0A84FF;
+      --sel: rgba(10,132,255,0.16);
+      --hover: rgba(10,132,255,0.08);
+      --danger: rgba(255,59,48,0.92);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg0: #0b0b0d;
+        --mat1: rgba(28,28,30,0.72);
+        --mat2: rgba(28,28,30,0.50);
+        --stroke: rgba(255,255,255,0.12);
+        --text0: rgba(255,255,255,0.92);
+        --text1: rgba(255,255,255,0.56);
+        --text2: rgba(255,255,255,0.38);
+        --shadow: 0 18px 60px rgba(0,0,0,0.55);
+        --accent: #0A84FF;
+        --sel: rgba(10,132,255,0.22);
+        --hover: rgba(10,132,255,0.12);
+        --danger: rgba(255,69,58,0.92);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1100px 700px at 20% 10%, rgba(10,132,255,0.20), transparent 55%),
+                  radial-gradient(900px 520px at 80% 25%, rgba(255,45,85,0.12), transparent 60%),
+                  radial-gradient(900px 520px at 60% 90%, rgba(52,199,89,0.10), transparent 60%),
+                  var(--bg0);
+      color: var(--text0);
+      padding: 22px;
+    }
+
+    .label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--text1); margin: 0 0 12px 6px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+    .window {
+      width: 720px;
+      height: 520px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--mat1), var(--mat2));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .titlebar { padding: 12px 14px; border-bottom: 1px solid var(--stroke); display: flex; align-items: center; gap: 10px; }
+    .traffic { display: flex; gap: 8px; margin-right: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--stroke); background: rgba(0,0,0,0.14); }
+
+    .main { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
+
+    .sidebar { border-right: 1px solid var(--stroke); padding: 12px; background: rgba(255,255,255,0.04); }
+    .sbTitle { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); margin: 8px 6px 10px; }
+    .sbItem { padding: 9px 10px; border-radius: 12px; display: flex; gap: 10px; align-items: center; color: var(--text1); font-size: 13px; border: 1px solid transparent; }
+    .sbItem:hover { background: var(--hover); }
+    .sbItem.active { background: var(--sel); border-color: rgba(10,132,255,0.22); color: var(--text0); font-weight: 750; }
+    .icon { width: 18px; height: 18px; border-radius: 6px; background: rgba(255,255,255,0.10); border: 1px solid var(--stroke); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+
+    .content { padding: 16px; overflow: auto; }
+    .header { display:flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; }
+    .hTitle { font-size: 18px; font-weight: 900; }
+    .hHint { color: var(--text2); font-size: 12px; }
+
+    .pill { padding: 7px 10px; border-radius: 999px; border: 1px solid var(--stroke); background: rgba(255,255,255,0.08); font-size: 12px; color: var(--text1); white-space: nowrap; }
+
+    .section { border-radius: 16px; border: 1px solid var(--stroke); background: rgba(255,255,255,0.06); padding: 14px; margin-bottom: 14px; }
+    .sectionTitle { font-weight: 900; margin: 0 0 10px 0; font-size: 13.5px; }
+
+    .row { display: grid; grid-template-columns: 240px 1fr; gap: 12px; align-items: center; padding: 9px 0; }
+    .row + .row { border-top: 1px solid var(--stroke); }
+
+    .k { color: var(--text0); font-size: 13px; font-weight: 750; }
+    .v { color: var(--text1); font-size: 13px; display:flex; gap: 10px; align-items:center; justify-content: flex-end; min-width: 0; }
+
+    .path { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text1); }
+
+    .btn { padding: 8px 12px; border-radius: 12px; border: 1px solid var(--stroke); background: rgba(255,255,255,0.10); color: var(--text0); font-weight: 800; font-size: 13px; white-space: nowrap; }
+    .btn.primary { border-color: rgba(10,132,255,0.35); background: rgba(10,132,255,0.18); }
+    .btn.danger { border-color: rgba(255,59,48,0.35); background: rgba(255,59,48,0.10); color: var(--danger); }
+
+    .toggle { width: 42px; height: 24px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid var(--stroke); position: relative; flex: 0 0 auto; }
+    .toggle::after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:999px; background: rgba(255,255,255,0.55); border:1px solid var(--stroke); }
+    .toggle.on { background: rgba(10,132,255,0.30); border-color: rgba(10,132,255,0.35); }
+    .toggle.on::after { left:20px; background: rgba(255,255,255,0.85); }
+
+    .slider { flex:1; height:6px; border-radius:999px; background: rgba(255,255,255,0.12); border:1px solid var(--stroke); position:relative; min-width: 180px; }
+    .slider::after { content:""; position:absolute; top:-4px; left:72%; width:14px; height:14px; border-radius:999px; background: rgba(255,255,255,0.75); border:1px solid var(--stroke); }
+
+    .seg {
+      display: inline-flex;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .seg button {
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--text1);
+      border: 0;
+      background: transparent;
+      font-weight: 800;
+    }
+    .seg button + button { border-left: 1px solid var(--stroke); }
+    .seg .on { background: var(--sel); color: var(--text0); }
+
+    .help { margin-top: 8px; color: var(--text2); font-size: 12px; line-height: 1.45; }
+
+    .dangerZone { border-color: rgba(255,59,48,0.35); background: rgba(255,59,48,0.08); }
+    .dangerZone .sectionTitle { color: var(--danger); }
+
+    .hotkey {
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text0);
+      white-space: nowrap;
+    }
+    .rec {
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(10,132,255,0.28);
+      background: rgba(10,132,255,0.12);
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--text0);
+      white-space: nowrap;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="label">Settings Panel v4 — Segmented layout selector + persistent restart notice + system-like hotkey recording</div>
+
+  <div class="grid">
+
+    <!-- GENERAL (segmented control for layout) -->
+    <div class="window">
+      <div class="titlebar"><div class="traffic"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div style="font-weight:900;">Settings</div><div style="color: var(--text1); font-size:12px;">ClipboardTool</div></div>
+      <div class="main">
+        <div class="sidebar">
+          <div class="sbTitle">Preferences</div>
+          <div class="sbItem active"><span class="icon">⚙︎</span> General</div>
+          <div class="sbItem"><span class="icon">🎨</span> Appearance</div>
+          <div class="sbItem"><span class="icon">👁</span> Preview</div>
+          <div class="sbItem"><span class="icon">🗂</span> Storage</div>
+          <div class="sbItem"><span class="icon">⌨︎</span> Shortcuts</div>
+          <div class="sbItem"><span class="icon">📥</span> Capture</div>
+          <div class="sbItem"><span class="icon">🛠</span> Advanced</div>
+        </div>
+        <div class="content">
+          <div class="header"><div><div class="hTitle">General</div><div class="hHint">Common app behavior and startup.</div></div><div class="pill">v0.1</div></div>
+
+          <div class="section">
+            <div class="sectionTitle">Startup</div>
+            <div class="row"><div class="k">Launch at login</div><div class="v"><div class="toggle on"></div></div></div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Monitoring</div>
+            <div class="row"><div class="k">Enable monitoring</div><div class="v"><div class="toggle on"></div></div></div>
+            <div class="row"><div class="k">Poll interval</div><div class="v"><span class="slider"></span><span class="pill">500ms</span></div></div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Layout</div>
+            <div class="row"><div class="k">Default preview layout</div><div class="v">
+              <div class="seg"><button>L</button><button class="on">R</button><button>B</button></div>
+            </div></div>
+            <div class="help">Popover cycles layouts in the order: R → L → B.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORAGE (restart always visible) -->
+    <div class="window">
+      <div class="titlebar"><div class="traffic"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div style="font-weight:900;">Settings</div><div style="color: var(--text1); font-size:12px;">ClipboardTool</div></div>
+      <div class="main">
+        <div class="sidebar">
+          <div class="sbTitle">Preferences</div>
+          <div class="sbItem"><span class="icon">⚙︎</span> General</div>
+          <div class="sbItem"><span class="icon">🎨</span> Appearance</div>
+          <div class="sbItem"><span class="icon">👁</span> Preview</div>
+          <div class="sbItem active"><span class="icon">🗂</span> Storage</div>
+          <div class="sbItem"><span class="icon">⌨︎</span> Shortcuts</div>
+          <div class="sbItem"><span class="icon">📥</span> Capture</div>
+          <div class="sbItem"><span class="icon">🛠</span> Advanced</div>
+        </div>
+        <div class="content">
+          <div class="header"><div><div class="hTitle">Storage</div><div class="hHint">Where the app stores shared data.</div></div><div class="pill">v0.1</div></div>
+
+          <div class="section">
+            <div class="sectionTitle">Directories</div>
+            <div class="row"><div class="k">Local config</div><div class="v"><span class="path">~/Library/Application Support/ClipboardTool/local</span></div></div>
+            <div class="row"><div class="k">Shared directory</div><div class="v"><span class="path">~/Library/Application Support/ClipboardTool/shared</span></div></div>
+            <div class="row"><div class="k">Actions</div><div class="v"><button class="btn">Choose…</button><button class="btn">Reset</button><button class="btn">Open</button></div></div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Restart</div>
+            <div class="row"><div class="k">Required after change</div><div class="v"><button class="btn primary">Restart</button><button class="btn">Later</button></div></div>
+            <div class="help">Changing the shared directory requires restarting the app to ensure all components use the new location.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHORTCUTS (system-like recording state) -->
+    <div class="window">
+      <div class="titlebar"><div class="traffic"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div style="font-weight:900;">Settings</div><div style="color: var(--text1); font-size:12px;">ClipboardTool</div></div>
+      <div class="main">
+        <div class="sidebar">
+          <div class="sbTitle">Preferences</div>
+          <div class="sbItem"><span class="icon">⚙︎</span> General</div>
+          <div class="sbItem"><span class="icon">🎨</span> Appearance</div>
+          <div class="sbItem"><span class="icon">👁</span> Preview</div>
+          <div class="sbItem"><span class="icon">🗂</span> Storage</div>
+          <div class="sbItem active"><span class="icon">⌨︎</span> Shortcuts</div>
+          <div class="sbItem"><span class="icon">📥</span> Capture</div>
+          <div class="sbItem"><span class="icon">🛠</span> Advanced</div>
+        </div>
+        <div class="content">
+          <div class="header"><div><div class="hTitle">Shortcuts</div><div class="hHint">Keyboard shortcuts and hotkeys.</div></div><div class="pill">v0.1</div></div>
+
+          <div class="section">
+            <div class="sectionTitle">Global hotkey</div>
+            <div class="row"><div class="k">Toggle popover</div><div class="v"><span class="hotkey">⌥ Space</span><span class="btn">Change…</span></div></div>
+            <div class="help">Click Change… then press a new key combination.</div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Recording</div>
+            <div class="row"><div class="k">Recording…</div><div class="v"><span class="rec">Press keys now</span><span class="btn">Cancel</span></div></div>
+            <div class="help">Press Esc to cancel. Press Backspace to clear.</div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Behavior</div>
+            <div class="row"><div class="k">Enter key</div><div class="v"><span class="pill">Paste</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVANCED (danger zone only here) -->
+    <div class="window">
+      <div class="titlebar"><div class="traffic"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div style="font-weight:900;">Settings</div><div style="color: var(--text1); font-size:12px;">ClipboardTool</div></div>
+      <div class="main">
+        <div class="sidebar">
+          <div class="sbTitle">Preferences</div>
+          <div class="sbItem"><span class="icon">⚙︎</span> General</div>
+          <div class="sbItem"><span class="icon">🎨</span> Appearance</div>
+          <div class="sbItem"><span class="icon">👁</span> Preview</div>
+          <div class="sbItem"><span class="icon">🗂</span> Storage</div>
+          <div class="sbItem"><span class="icon">⌨︎</span> Shortcuts</div>
+          <div class="sbItem"><span class="icon">📥</span> Capture</div>
+          <div class="sbItem active"><span class="icon">🛠</span> Advanced</div>
+        </div>
+        <div class="content">
+          <div class="header"><div><div class="hTitle">Advanced</div><div class="hHint">Maintenance and data tools.</div></div><div class="pill">v0.1</div></div>
+
+          <div class="section">
+            <div class="sectionTitle">Database</div>
+            <div class="row"><div class="k">Optimize / Vacuum</div><div class="v"><button class="btn">Optimize</button><button class="btn">Vacuum</button></div></div>
+            <div class="row"><div class="k">Integrity check</div><div class="v"><button class="btn">Run</button></div></div>
+          </div>
+
+          <div class="section">
+            <div class="sectionTitle">Transfer</div>
+            <div class="row"><div class="k">Export</div><div class="v"><button class="btn">Export…</button></div></div>
+            <div class="row"><div class="k">Import</div><div class="v"><button class="btn">Import…</button><span class="pill">Keep backup</span></div></div>
+          </div>
+
+          <div class="section dangerZone">
+            <div class="sectionTitle">Danger zone</div>
+            <div class="row"><div class="k">Remove history</div><div class="v"><button class="btn danger">Remove (keep pinned)</button><button class="btn danger">Remove all</button></div></div>
+            <div class="help">These actions permanently delete database rows and blob files.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

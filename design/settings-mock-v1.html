@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ClipboardTool Settings Mock v1</title>
+  <style>
+    :root {
+      --bg0: #f5f5f7;
+      --mat1: rgba(255,255,255,0.72);
+      --mat2: rgba(255,255,255,0.48);
+      --stroke: rgba(0,0,0,0.10);
+      --text0: rgba(0,0,0,0.90);
+      --text1: rgba(0,0,0,0.60);
+      --shadow: 0 18px 60px rgba(0,0,0,0.14);
+      --accent: #0A84FF;
+      --sel: rgba(10,132,255,0.16);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg0: #0b0b0d;
+        --mat1: rgba(28,28,30,0.72);
+        --mat2: rgba(28,28,30,0.50);
+        --stroke: rgba(255,255,255,0.12);
+        --text0: rgba(255,255,255,0.92);
+        --text1: rgba(255,255,255,0.56);
+        --shadow: 0 18px 60px rgba(0,0,0,0.55);
+        --accent: #0A84FF;
+        --sel: rgba(10,132,255,0.22);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1100px 700px at 20% 10%, rgba(10,132,255,0.20), transparent 55%),
+                  radial-gradient(900px 520px at 80% 25%, rgba(255,45,85,0.12), transparent 60%),
+                  radial-gradient(900px 520px at 60% 90%, rgba(52,199,89,0.10), transparent 60%),
+                  var(--bg0);
+      color: var(--text0);
+      padding: 26px;
+    }
+
+    .label {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text1);
+      margin: 0 0 12px 6px;
+    }
+
+    .window {
+      width: 820px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--mat1), var(--mat2));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      overflow: hidden;
+    }
+
+    .titlebar {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--stroke);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 8px;
+      margin-right: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 999px; border: 1px solid var(--stroke); background: rgba(0,0,0,0.14); }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .tab {
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: var(--text1);
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tab.active {
+      background: var(--sel);
+      border-color: rgba(10,132,255,0.25);
+      color: var(--text0);
+      font-weight: 650;
+    }
+
+    .content {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .section {
+      border-radius: 16px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.06);
+      padding: 14px;
+    }
+
+    .sectionTitle {
+      font-weight: 750;
+      margin: 0 0 10px 0;
+      font-size: 13.5px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 9px 0;
+      border-top: 1px solid rgba(255,255,255,0.00);
+    }
+
+    .row + .row { border-top: 1px solid var(--stroke); }
+
+    .k {
+      color: var(--text0);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .v {
+      color: var(--text1);
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: var(--text1);
+      white-space: nowrap;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.10);
+      color: var(--text0);
+      font-weight: 650;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      border-color: rgba(10,132,255,0.35);
+      background: rgba(10,132,255,0.18);
+    }
+
+    .toggle {
+      width: 42px; height: 24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid var(--stroke);
+      position: relative;
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid var(--stroke);
+    }
+    .toggle.on { background: rgba(10,132,255,0.30); border-color: rgba(10,132,255,0.35); }
+    .toggle.on::after { left: 20px; background: rgba(255,255,255,0.85); }
+
+    .slider {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid var(--stroke);
+      position: relative;
+      min-width: 180px;
+    }
+    .slider::after {
+      content: "";
+      position: absolute;
+      top: -4px; left: 70%;
+      width: 14px; height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--stroke);
+    }
+
+    .help {
+      margin-top: 8px;
+      color: var(--text1);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="label">Settings Panel v1 — macOS-like tabs, modern rounded style</div>
+
+  <div class="window">
+    <div class="titlebar">
+      <div class="traffic"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div style="font-weight:750;">Settings</div>
+      <div style="color: var(--text1); font-size:12px;">ClipboardTool</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">⚙︎ General</div>
+      <div class="tab">🎨 Appearance</div>
+      <div class="tab">🗂 Storage</div>
+      <div class="tab">⌨︎ Shortcuts</div>
+      <div class="tab">📥 Capture</div>
+      <div class="tab">🛠 Advanced</div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="sectionTitle">General</div>
+        <div class="row">
+          <div class="k">Launch at login</div>
+          <div class="v"><div class="toggle on"></div></div>
+        </div>
+        <div class="row">
+          <div class="k">Monitoring</div>
+          <div class="v"><div class="toggle on"></div><span class="pill">0.5s poll</span></div>
+        </div>
+        <div class="row">
+          <div class="k">Language</div>
+          <div class="v"><span class="pill">Follow system</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sectionTitle">Preview</div>
+        <div class="row">
+          <div class="k">Wrap</div>
+          <div class="v"><div class="toggle on"></div></div>
+        </div>
+        <div class="row">
+          <div class="k">Monospace</div>
+          <div class="v"><div class="toggle on"></div></div>
+        </div>
+        <div class="help">These affect the preview pane in the popover.</div>
+      </div>
+
+      <div class="section">
+        <div class="sectionTitle">Quick actions</div>
+        <div class="row">
+          <div class="k">Optimize database</div>
+          <div class="v"><button class="btn">Optimize</button><button class="btn">Vacuum</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
