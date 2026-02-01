@@ -1,0 +1,40 @@
+name: Release DMG
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate tag format (strict vX.Y.Z)
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag '${TAG}'. Expected strict vX.Y.Z" >&2
+            exit 2
+          fi
+
+      - name: Build DMG
+        shell: bash
+        run: |
+          chmod +x scripts/build_dmg.sh
+          ./scripts/build_dmg.sh "${GITHUB_REF_NAME}"
+
+      - name: Create GitHub Release and upload DMG
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Pasty ${GITHUB_REF_NAME}"
+          files: |
+            dist/Pasty-*.dmg
+          generate_release_notes: true
