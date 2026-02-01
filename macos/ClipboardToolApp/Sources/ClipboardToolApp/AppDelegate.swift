@@ -106,8 +106,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             p.collectionBehavior = [.moveToActiveSpace]
             p.hidesOnDeactivate = true
 
-            // Hide traffic-light buttons for a cleaner popover look.
-            hideTrafficLights(p)
+            // Traffic lights behavior is configurable.
+            let hide = UserDefaults.standard.object(forKey: "ClipboardTool.hideTrafficLights") == nil
+                ? true
+                : UserDefaults.standard.bool(forKey: "ClipboardTool.hideTrafficLights")
+            p.standardWindowButton(.closeButton)?.isHidden = hide
+            p.standardWindowButton(.miniaturizeButton)?.isHidden = hide
+            p.standardWindowButton(.zoomButton)?.isHidden = hide
 
             // Persist window frame.
             observePanelFrame(p)
@@ -151,6 +156,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Placement is handled by applyInitialPanelPlacement(p) when the panel is created.
         // On subsequent opens we keep last position; no need to reposition near status item.
+
+        // Apply current traffic-light preference each time.
+        let hide = UserDefaults.standard.object(forKey: "ClipboardTool.hideTrafficLights") == nil
+            ? true
+            : UserDefaults.standard.bool(forKey: "ClipboardTool.hideTrafficLights")
+        panel.standardWindowButton(.closeButton)?.isHidden = hide
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = hide
+        panel.standardWindowButton(.zoomButton)?.isHidden = hide
 
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
@@ -240,11 +253,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func hideTrafficLights(_ panel: NSPanel) {
-        panel.standardWindowButton(.closeButton)?.isHidden = true
-        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        panel.standardWindowButton(.zoomButton)?.isHidden = true
-    }
+    // Traffic lights are applied inline using UserDefaults (avoid MainActor crossing in AppDelegate).
 
     private func applyInitialPanelPlacement(_ panel: NSPanel) {
         if let s = UserDefaults.standard.string(forKey: Keys.panelFrame) {

@@ -23,6 +23,10 @@ final class SharedAppState: ObservableObject {
         didSet { UserDefaults.standard.set(backgroundTint, forKey: Keys.backgroundTint) }
     }
 
+    @Published var hideTrafficLights: Bool = true {
+        didSet { UserDefaults.standard.set(hideTrafficLights, forKey: Keys.hideTrafficLights) }
+    }
+
     // Preview settings (persisted via UserDefaults)
     @Published var previewWrap: Bool = true {
         didSet { UserDefaults.standard.set(previewWrap, forKey: Keys.previewWrap) }
@@ -46,6 +50,7 @@ final class SharedAppState: ObservableObject {
         static let backgroundTint = "ClipboardTool.backgroundTint"
         static let previewWrap = "ClipboardTool.previewWrap"
         static let previewMonospace = "ClipboardTool.previewMonospace"
+        static let hideTrafficLights = "ClipboardTool.hideTrafficLights"
     }
 
     private init() {
@@ -77,6 +82,10 @@ final class SharedAppState: ObservableObject {
         let savedTint = UserDefaults.standard.double(forKey: Keys.backgroundTint)
         if savedTint > 0 {
             backgroundTint = min(0.35, max(0.02, savedTint))
+        }
+
+        if UserDefaults.standard.object(forKey: Keys.hideTrafficLights) != nil {
+            hideTrafficLights = UserDefaults.standard.bool(forKey: Keys.hideTrafficLights)
         }
 
         applyPollInterval()

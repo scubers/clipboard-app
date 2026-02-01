@@ -69,7 +69,7 @@ struct HotkeyRecorder: View {
         }
     }
 
-    private static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> (UInt32, [String]) {
+    static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> (UInt32, [String]) {
         var mods: UInt32 = 0
         var display: [String] = []
 
@@ -92,7 +92,7 @@ struct HotkeyRecorder: View {
         return (mods, display)
     }
 
-    private static func keyName(for event: NSEvent) -> String {
+    static func keyName(for event: NSEvent) -> String {
         // Prefer charactersIgnoringModifiers for readable keys.
         if let s = event.charactersIgnoringModifiers, !s.isEmpty {
             let upper = s.uppercased()
