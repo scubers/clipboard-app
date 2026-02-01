@@ -35,6 +35,7 @@ struct SettingsSidebarRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focusable(false)
         .foregroundStyle(selected ? .primary : .secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
