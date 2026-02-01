@@ -114,9 +114,18 @@ struct ContentView: View {
         .onAppear {
             vm.bootstrap()
             focus = .search
+            // Default selection for keyboard navigation.
+            if vm.selectedID == nil {
+                vm.selectedID = vm.items.first?.id
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
             focus = .search
+            // Each time the panel is activated, default-select the first item so
+            // Up/Down navigation works immediately.
+            if let first = vm.items.first?.id {
+                vm.selectedID = first
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .clipboardToolItemsChanged)) { _ in
             // Keep list live if the user isn't actively searching.
