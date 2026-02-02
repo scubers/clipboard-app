@@ -12,6 +12,23 @@ final class AppStore: ObservableObject {
 
     @Published private(set) var sharedDataDir: String = AppPaths.effectiveSharedDir().path
 
+    // Data change notifications (via @Published instead of NotificationCenter)
+    @Published private(set) var itemsVersion: Int = 0
+    @Published private(set) var storageVersion: Int = 0
+
+    // Paste completion callback for auto-paste to previous app
+    var onPasteComplete: ((String, String?) -> Void)? = nil
+
+    // Increment versions to trigger @Published updates
+    func incrementItemsVersion() {
+        itemsVersion += 1
+    }
+
+    func incrementStorageVersion() {
+        storageVersion += 1
+        itemsVersion += 1
+    }
+
     // macOS-only syncable settings (stored in <sharedDir>/config/macos.json)
     private var macCfg: MacOSConfigStore.Config
     private var bootstrapping = true
@@ -142,9 +159,10 @@ final class AppStore: ObservableObject {
         // Data dir or DB contents changed: stop any background OCR work and refresh UI.
         ocrQueue.reset()
         if storageChanged {
-            NotificationCenter.default.post(name: .clipboardToolStorageChanged, object: nil)
+            incrementStorageVersion()
+        } else {
+            incrementItemsVersion()
         }
-        NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
     }
 
     func startMonitoring() {
@@ -153,7 +171,7 @@ final class AppStore: ObservableObject {
             guard self.monitoringEnabled else { return }
             do {
                 try self.core.addText(text, sourceApp: sourceApp)
-                NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+                self.incrementItemsVersion()
             } catch {
                 // Swallow errors: we don't want clipboard monitoring to crash the app.
             }
@@ -164,7 +182,7 @@ final class AppStore: ObservableObject {
             guard self.monitoringEnabled else { return }
             do {
                 try self.core.addImage(mime: mime, data: data, sourceApp: sourceApp)
-                NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+                self.incrementItemsVersion()
             } catch {
                 // Swallow errors: we don't want clipboard monitoring to crash the app.
             }

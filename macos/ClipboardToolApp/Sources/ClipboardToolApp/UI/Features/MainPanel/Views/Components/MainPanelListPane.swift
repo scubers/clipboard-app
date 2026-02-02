@@ -34,8 +34,8 @@ struct MainPanelListPane: View {
             .onChange(of: vm.selectedID) { oldValue, newValue in
                 scrollIfNeeded(proxy: proxy, oldValue: oldValue, newValue: newValue)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
-                if let first = items.first?.id {
+            .onChange(of: vm.focusTarget) { _, newTarget in
+                if newTarget == .search, let first = items.first?.id {
                     DispatchQueue.main.async { proxy.scrollTo(first, anchor: .top) }
                 }
             }

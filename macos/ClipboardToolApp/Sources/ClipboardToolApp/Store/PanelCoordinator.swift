@@ -11,6 +11,7 @@ import SwiftUI
 @MainActor
 final class PanelCoordinator {
     private let store: AppStore
+    private weak var viewModel: MainPanelViewModel?
 
     private var panel: NSPanel?
     private var localKeyMonitor: Any?
@@ -26,8 +27,9 @@ final class PanelCoordinator {
         static let lastPanelScreenID = "ClipboardTool.lastPanelScreenID"
     }
 
-    init(store: AppStore) {
+    init(store: AppStore, viewModel: MainPanelViewModel?) {
         self.store = store
+        self.viewModel = viewModel
 
         // Hide panel when app deactivates (clicking outside / switching apps)
         appDeactivateObserver = NotificationCenter.default.addObserver(
@@ -72,7 +74,8 @@ final class PanelCoordinator {
         }
 
         if panel == nil {
-            let view = ContentView()
+            guard let viewModel = viewModel else { return }
+            let view = ContentView(vm: viewModel)
             let hosting = NSHostingController(rootView: view)
 
             let p = NSPanel(contentViewController: hosting)
@@ -97,26 +100,24 @@ final class PanelCoordinator {
 
             // ESC to close; Return to paste (default behavior).
             localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self, weak p] event in
-                if let p, p.isVisible {
-                    if event.keyCode == 53 {
-                        p.orderOut(nil)
-                        return nil
-                    }
-                    if event.keyCode == 126 {
-                        NotificationCenter.default.post(name: .clipboardToolSelectPrev, object: nil)
-                        return nil
-                    }
-                    if event.keyCode == 125 {
-                        NotificationCenter.default.post(name: .clipboardToolSelectNext, object: nil)
-                        return nil
-                    }
-                    if event.keyCode == 36 || event.keyCode == 76 {
-                        NotificationCenter.default.post(name: .clipboardToolPasteAction, object: nil)
-                        return nil
-                    }
+                guard let self, let p, p.isVisible else { return event }
+
+                switch event.keyCode {
+                case 53: // ESC
+                    p.orderOut(nil)
+                    return nil
+                case 126: // Up arrow
+                    self.viewModel?.selectPrev()
+                    return nil
+                case 125: // Down arrow
+                    self.viewModel?.selectNext()
+                    return nil
+                case 36, 76: // Enter / Return
+                    self.viewModel?.pasteSelectedToPreviousApp()
+                    return nil
+                default:
+                    return event
                 }
-                _ = self
-                return event
             }
 
             panel = p
@@ -135,7 +136,8 @@ final class PanelCoordinator {
         panel.orderFrontRegardless()
         panel.makeFirstResponder(panel.contentView)
 
-        NotificationCenter.default.post(name: .clipboardToolFocusSearch, object: nil)
+        // Reset focus to search and select first item.
+        viewModel?.resetFocusToSearch()
     }
 
     private func applyTrafficLights(_ panel: NSPanel) {

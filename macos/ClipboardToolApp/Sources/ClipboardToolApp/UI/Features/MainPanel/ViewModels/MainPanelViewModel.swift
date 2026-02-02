@@ -12,6 +12,14 @@ final class MainPanelViewModel: ObservableObject {
         }
     }
 
+    // Focus state: nil = no change, .search = focus search, .list = focus list
+    @Published var focusTarget: FocusTarget? = nil
+
+    enum FocusTarget {
+        case search
+        case list
+    }
+
     // Items after applying type filter (all/text/images)
     @Published private(set) var filteredItems: [Item] = []
     @Published var query: String = ""
@@ -51,7 +59,26 @@ final class MainPanelViewModel: ObservableObject {
             .sink { [weak self] _ in
                 self?.refresh()
             }
+
+        // Subscribe to AppStore data changes instead of NotificationCenter.
+        // When itemsVersion changes, refresh the list (only if query is empty to avoid duplicate queries).
+        subscribeToStoreChanges()
     }
+
+    private func subscribeToStoreChanges() {
+        store.$itemsVersion
+            .sink { [weak self] _ in
+                guard let self else { return }
+                // Only refresh automatically when not in search mode.
+                // This prevents duplicate queries when user is typing.
+                if self.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    self.refresh()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private var cancellables = Set<AnyCancellable>()
 
     func bootstrap() {
         do {
@@ -62,6 +89,16 @@ final class MainPanelViewModel: ObservableObject {
         } catch {
             self.error = String(describing: error)
         }
+    }
+
+    func resetFocusToSearch() {
+        // Reset selection to first item and focus to search.
+        selectedID = filteredItems.first?.id
+        focusTarget = .search
+    }
+
+    private func updateFocusToNext() {
+        focusTarget = .list
     }
 
     func refresh() {
@@ -176,6 +213,8 @@ final class MainPanelViewModel: ObservableObject {
             if let item = items.first(where: { $0.id == id }), item.type == "image" {
                 let p = try repo.getBlobPath(id: id)
                 try writeImageToPasteboard(filePath: p)
+                // Refresh ordering immediately.
+                store.incrementItemsVersion()
                 return
             }
 
@@ -183,7 +222,7 @@ final class MainPanelViewModel: ObservableObject {
             pb.setString(text, forType: .string)
 
             // Refresh ordering immediately.
-            NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+            store.incrementItemsVersion()
         } catch {
             self.error = String(describing: error)
         }
@@ -205,27 +244,20 @@ final class MainPanelViewModel: ObservableObject {
             if let item = items.first(where: { $0.id == id }), item.type == "image" {
                 let p = try repo.getBlobPath(id: id)
                 try writeImageToPasteboard(filePath: p)
-                NotificationCenter.default.post(
-                    name: .clipboardToolPasteSelection,
-                    object: nil,
-                    userInfo: [ClipboardToolNotificationKeys.kind: "image"]
-                )
-                NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+                // Refresh ordering immediately.
+                store.incrementItemsVersion()
+                // Notify callback to switch to previous app and send Cmd+V
+                store.onPasteComplete?("image", nil)
                 return
             }
 
             let text = try repo.getText(id: id)
             pb.setString(text, forType: .string)
 
-            NotificationCenter.default.post(
-                name: .clipboardToolPasteSelection,
-                object: nil,
-                userInfo: [
-                    ClipboardToolNotificationKeys.kind: "text",
-                    ClipboardToolNotificationKeys.text: text,
-                ]
-            )
-            NotificationCenter.default.post(name: .clipboardToolItemsChanged, object: nil)
+            // Refresh ordering immediately.
+            store.incrementItemsVersion()
+            // Notify callback to switch to previous app and send Cmd+V
+            store.onPasteComplete?("text", text)
         } catch {
             self.error = String(describing: error)
         }

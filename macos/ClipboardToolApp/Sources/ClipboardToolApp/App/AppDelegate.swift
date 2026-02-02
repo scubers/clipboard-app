@@ -7,7 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
 
     private let store = AppStore.shared
-    private lazy var panelCoordinator = PanelCoordinator(store: store)
+    private let mainPanelVM = MainPanelViewModel()
+    private lazy var panelCoordinator = PanelCoordinator(store: store, viewModel: mainPanelVM)
 
     private var previousApp: NSRunningApplication?
 
@@ -37,12 +38,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.panelCoordinator.togglePanel(fromHotkey: true)
         }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handlePasteSelection(_:)),
-            name: .clipboardToolPasteSelection,
-            object: nil
-        )
+        // Set up paste completion callback instead of using NotificationCenter.
+        store.onPasteComplete = { [weak self] kind, text in
+            self?.handlePasteComplete(kind: kind, text: text)
+        }
     }
 
     @objc private func openClipboard() {
@@ -56,12 +55,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
-    @objc private func handlePasteSelection(_ note: Notification) {
+    private func handlePasteComplete(kind: String, text: String?) {
         // PanelCoordinator already hides the panel on deactivate; also hide proactively.
         // (No direct panel reference here.)
-
-        let kind = (note.userInfo?[ClipboardToolNotificationKeys.kind] as? String) ?? "text"
-        let text = note.userInfo?[ClipboardToolNotificationKeys.text] as? String
 
         if kind == "text" && (text == nil) {
             return
@@ -80,8 +76,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             self?.sendPasteKeystroke()
         }
-
-        _ = text
     }
 
     private func sendPasteKeystroke() {

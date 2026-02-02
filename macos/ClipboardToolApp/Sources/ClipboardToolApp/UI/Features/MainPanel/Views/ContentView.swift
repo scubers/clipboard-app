@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var vm = MainPanelViewModel()
-    @StateObject private var appState = AppStore.shared
+    @ObservedObject var vm: MainPanelViewModel
+    @ObservedObject var appState = AppStore.shared
 
     @FocusState private var focus: FocusTarget?
 
@@ -65,33 +65,18 @@ struct ContentView: View {
             vm.bootstrap()
             focus = .search
         }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolFocusSearch)) { _ in
-            focus = .search
-            // Per spec: each activation jumps to top and selects first item.
-            vm.selectedID = vm.filteredItems.first?.id
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolSelectPrev)) { _ in
-            vm.selectPrev()
-            focus = .list
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolSelectNext)) { _ in
-            vm.selectNext()
-            focus = .list
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolPasteAction)) { _ in
-            // Default Enter behavior: paste.
-            vm.pasteSelectedToPreviousApp()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolItemsChanged)) { _ in
-            if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                vm.refresh()
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .clipboardToolStorageChanged)) { _ in
-            vm.refresh()
-        }
         .onChange(of: vm.selectedID) { _, _ in
             vm.loadPreview()
+        }
+        .onChange(of: vm.focusTarget) { _, newTarget in
+            if let newTarget {
+                switch newTarget {
+                case .search:
+                    focus = .search
+                case .list:
+                    focus = .list
+                }
+            }
         }
     }
 

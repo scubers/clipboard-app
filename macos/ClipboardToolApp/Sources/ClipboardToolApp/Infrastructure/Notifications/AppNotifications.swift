@@ -1,16 +1,13 @@
 import Foundation
 
-extension Notification.Name {
-    static let clipboardToolFocusSearch = Notification.Name("ClipboardTool.focusSearch")
-    static let clipboardToolItemsChanged = Notification.Name("ClipboardTool.itemsChanged")
-    static let clipboardToolStorageChanged = Notification.Name("ClipboardTool.storageChanged")
-    static let clipboardToolPasteSelection = Notification.Name("ClipboardTool.pasteSelection")
-    static let clipboardToolPasteAction = Notification.Name("ClipboardTool.pasteAction")
-    static let clipboardToolSelectPrev = Notification.Name("ClipboardTool.selectPrev")
-    static let clipboardToolSelectNext = Notification.Name("ClipboardTool.selectNext")
-}
+// Note: App-specific notifications have been removed in favor of data-driven architecture.
+// Components now communicate via:
+// - @Published properties in AppStore and ViewModels
+// - Direct method calls (e.g., PanelCoordinator → ViewModel)
+// - Callbacks/closures for cross-component events (e.g., AppStore.onPasteComplete)
 
-enum ClipboardToolNotificationKeys {
-    static let text = "text"
-    static let kind = "kind" // "text" | "image"
-}
+// If new notifications are needed in the future, add them here with clear documentation
+// of why a notification is the appropriate pattern over data-binding or method calls.
+
+// System-level notifications (NSApplication, NSWindow, etc.) are used directly from AppKit
+// and do not need to be redefined here.
