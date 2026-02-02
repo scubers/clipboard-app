@@ -134,10 +134,13 @@ final class PanelCoordinator {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
-        panel.makeFirstResponder(panel.contentView)
+        // NOTE: Don't call makeFirstResponder here - let SwiftUI's @FocusState handle it.
 
-        // Reset focus to search and select first item.
-        viewModel?.resetFocusToSearch()
+        // Reset focus to search and select first item after window is fully shown.
+        // Small delay ensures SwiftUI has processed the window becoming key.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            self.viewModel?.resetFocusToSearch()
+        }
     }
 
     private func applyTrafficLights(_ panel: NSPanel) {

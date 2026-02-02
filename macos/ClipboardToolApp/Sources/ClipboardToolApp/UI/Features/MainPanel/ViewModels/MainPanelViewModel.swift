@@ -94,6 +94,9 @@ final class MainPanelViewModel: ObservableObject {
     func resetFocusToSearch() {
         // Reset selection to first item and focus to search.
         selectedID = filteredItems.first?.id
+        // Force focus update by clearing first, then setting to search.
+        // This ensures onChange triggers every time the panel is shown.
+        focusTarget = nil
         focusTarget = .search
     }
 
