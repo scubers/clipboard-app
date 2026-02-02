@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by *Keep a Changelog*.
 
+## [0.4.0] - 2026-02-03
+### Added
+- File and folder copy handler: File URLs on clipboard are now properly detected and ignored
+- New clipboard handler architecture with extensible type-based handlers
+
+### Changed
+- Replaced clipboard capture with modular handler system:
+  - FileHandler for file URLs (runs before TextHandler)
+  - ImageHandler for image content
+  - TextHandler for text content
+  - UnknownTypeLoggerHandler for debugging unsupported types
+- Removed notification system from the app
+
 ## [0.1.0] - 2026-02-01
 ### Added
 - Go core library (C ABI) with SQLite persistence under a single data directory.
