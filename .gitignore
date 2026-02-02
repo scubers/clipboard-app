@@ -39,3 +39,6 @@ macos/build/
 
 # Local distribution output
 /dist/
+
+# Claude Code local settings
+.claude/settings.local.json
