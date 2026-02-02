@@ -62,7 +62,12 @@ Data/
 
 Services/
   ClipboardCapture/
-    PasteboardMonitor.swift
+    PasteboardMonitor.swift         # Clipboard change detection only
+    ClipboardHandler.swift          # Handler protocol + registry
+    Handlers/
+      TextHandler.swift            # Plain text handler
+      ImageHandler.swift           # Image handler (PNG, TIFF, JPEG, WebP)
+      UnknownTypeLoggerHandler.swift  # Logs unhandled types
   OCR/
     OCRService.swift
     OCRQueueManager.swift
@@ -81,7 +86,7 @@ Infrastructure/
     MacOSConfig.swift        # Codable struct(s)
     MacOSConfigStore.swift   # reads/writes <sharedDir>/config/macos.json
   Notifications/
-    AppNotifications.swift
+    AppNotifications.swift   # Legacy - now contains architecture notes only
 ```
 
 Notes:
@@ -100,7 +105,56 @@ Notes:
 ### Forbidden dependencies
 - UI **must not** call `@_silgen_name` / C bridge functions directly.
 - UI **must not** read/write config files directly.
-- ViewModels **must not** import other feature’s Views/ViewModels.
+- ViewModels **must not** import other feature's Views/ViewModels.
+
+### Threading Rules
+- **@Published property updates** must happen on main thread.
+- **Handler callbacks** that update `@Published` must wrap calls in `Task { @MainActor in ... }`.
+- **Async handler methods** may run on any thread; don't assume main thread.
+
+---
+
+## Design Patterns
+
+### Clipboard Handler Pattern
+
+For handling different clipboard content types, we use a **handler registration pattern**:
+
+**Key Principles:**
+1. **Separation of Concerns**: Detection vs. processing logic
+2. **Handler Autonomy**: Each handler decides what to do (store/OCR/ignore)
+3. **Strict Type Matching**: No fallback to incorrect types
+4. **Extensibility**: Add new types without modifying core monitoring
+
+**Architecture:**
+```
+PasteboardMonitor (detects changes)
+    ↓
+ClipboardHandlerRegistry (routes events)
+    ↓
+Concrete Handlers (TextHandler, ImageHandler, ...)
+```
+
+**Usage:**
+```swift
+// Register handlers in AppStore.startMonitoring()
+let textHandler = TextHandler(core: core) { [weak self] text, sourceApp in
+    // Important: Wrap @MainActor updates in Task
+    Task { @MainActor in
+        self.incrementItemsVersion()
+    }
+}
+monitor.handlerRegistry.register(textHandler)
+
+let imageHandler = ImageHandler(core: core) { [weak self] data, mime, sourceApp in
+    Task { @MainActor in
+        self.incrementItemsVersion()
+    }
+}
+monitor.handlerRegistry.register(imageHandler)
+```
+
+See `DESIGN_CLIPBOARD_HANDLER.md` for detailed design and implementation guide.
 
 ### How features communicate
 Feature-to-feature interaction must happen via one of:
@@ -136,6 +190,13 @@ macOS settings file should be **pretty printed** and **sorted keys**.
 - Publishes syncable settings (`@Published`)
 - Holds references to repositories/services
 - Provides high-level intent methods for UI (e.g. refresh data, toggle monitoring)
+- Registers clipboard content handlers with `PasteboardMonitor`'s registry
+
+### PasteboardMonitor
+- Detects clipboard changes (polling `NSPasteboard.changeCount`)
+- Dispatches events to registered handlers via `ClipboardHandlerRegistry`
+- Provides suppression mechanism to avoid feedback loops
+- Does NOT process content directly (delegated to handlers)
 
 ### PanelCoordinator
 - Owns panel show/hide behavior
@@ -177,4 +238,9 @@ Rules:
    - if syncable macOS-only → `macos.json` via `MacOSConfigStore`
    - if core/cross-platform → add to Go core settings + expose API
    - if device-only → UserDefaults
-4. Ensure build still works with SwiftPM, Xcode project (XcodeGen), and CI release workflow.
+4. **If adding clipboard type support**:
+   - Create new handler in `Services/ClipboardCapture/Handlers/`
+   - Implement `ClipboardHandler` protocol
+   - Register in `AppStore.startMonitoring()`
+   - See `DESIGN_CLIPBOARD_HANDLER.md` for detailed guide
+5. Ensure build still works with SwiftPM, Xcode project (XcodeGen), and CI release workflow.

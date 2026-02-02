@@ -51,8 +51,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        // Use the standard Settings action for SwiftUI apps
+        // See: https://developer.apple.com/documentation/appkit/nsapplication/1428467-opensettings
+        NSApp.sendAction(#selector(self.openSettings), to: nil, from: nil)
     }
 
     private func handlePasteComplete(kind: String, text: String?) {

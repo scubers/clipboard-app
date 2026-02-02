@@ -166,27 +166,31 @@ final class AppStore: ObservableObject {
     }
 
     func startMonitoring() {
-        monitor.onText = { [weak self] text, sourceApp in
-            guard let self else { return }
-            guard self.monitoringEnabled else { return }
-            do {
-                try self.core.addText(text, sourceApp: sourceApp)
-                self.incrementItemsVersion()
-            } catch {
-                // Swallow errors: we don't want clipboard monitoring to crash the app.
-            }
-        }
+        // Register clipboard content handlers
 
-        monitor.onImage = { [weak self] data, mime, sourceApp in
+        // Text handler
+        let textHandler = TextHandler(core: core) { [weak self] text, sourceApp in
             guard let self else { return }
             guard self.monitoringEnabled else { return }
-            do {
-                try self.core.addImage(mime: mime, data: data, sourceApp: sourceApp)
+            // Ensure @Published updates happen on main thread
+            Task { @MainActor in
                 self.incrementItemsVersion()
-            } catch {
-                // Swallow errors: we don't want clipboard monitoring to crash the app.
             }
         }
+        monitor.handlerRegistry.register(textHandler)
+
+        // Image handler
+        let imageHandler = ImageHandler(core: core) { [weak self] data, mime, sourceApp in
+            guard let self else { return }
+            guard self.monitoringEnabled else { return }
+            // Ensure @Published updates happen on main thread
+            Task { @MainActor in
+                self.incrementItemsVersion()
+            }
+        }
+        monitor.handlerRegistry.register(imageHandler)
+
+        // Start monitoring
         monitor.start()
     }
 }
