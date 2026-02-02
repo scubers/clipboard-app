@@ -5,7 +5,9 @@
 - `macos/` SwiftUI app links the library and calls the C functions.
 
 ## Development rule (mandatory)
-**After every change, verify builds are green** (don’t leave the repo in a broken build state):
+
+**After every change, verify builds are green** (don't leave the repo in a broken build state):
+
 - Core + ABI/link smoke test:
   ```bash
   ./scripts/build_macos_smoketest.sh
@@ -47,4 +49,40 @@ This is irreversible.
 1) Improve "focus not lost" behavior: explore a non-activating panel or alternative event routing.
 2) Make paste-to-previous-app more robust (retry paste after activation; optionally use AX to insert text directly).
 3) Better keyboard navigation: Up/Down in list + Enter paste + Esc close.
+
+---
+
+## macOS Development Workflow
+
+### Recommended workflow after code changes
+
+When modifying macOS app code (Swift/SwiftUI), follow this workflow:
+
+1. **Generate Xcode project** (if file structure changed):
+   ```bash
+   ./scripts/gen_xcodeproj.sh
+   ```
+
+2. **Build and verify**:
+   ```bash
+   ./scripts/build_macos_app_bundle.sh
+   ```
+
+3. **Run and test** (optional):
+   ```bash
+   open -n dist/Pasty.app
+   ```
+
+### Why this workflow?
+
+- `gen_xcodeproj.sh` ensures file structure is correct before building
+- `build_macos_app_bundle.sh` handles app assembly and produces runnable `.app`
+- No manual `xcodebuild` commands → avoids errors and saves tokens
+- Consistent with CI/CD pipeline (uses same scripts)
+
+### When is each step required?
+
+- **gen_xcodeproj.sh**: Required when adding/removing/moving Swift files
+- **build_macos_app_bundle.sh**: Required when any code changes (to verify build)
+- **Running the app**: Optional, for quick manual verification
 

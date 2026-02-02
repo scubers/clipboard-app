@@ -30,6 +30,7 @@
 		6546F254686C0E7D2A29AFF9 /* MainPanelPreviewPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E958432422909369CF86B /* MainPanelPreviewPane.swift */; };
 		66050F5D9D2D19606FA69BFB /* MainPanelFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4445A65E70C97CB5616F2B /* MainPanelFooter.swift */; };
 		6E72FBC8E448CCED6E3ED9A9 /* AdvancedSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5840C01AAA4417F0FAD68497 /* AdvancedSettingsPage.swift */; };
+		6ED60472D0AE19CA5B022C97 /* FileHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94EA5DAA7CCF82DCCF0BF0F /* FileHandler.swift */; };
 		7B6218BBA7547C91266474AC /* SettingsSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */; };
 		7C46B9AF7135D6CDA82FE3E7 /* TextHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98EF7B701B491E00CDF1503 /* TextHandler.swift */; };
 		85601B9815B5A502BDCB20B8 /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783E9586914BEFFDD2C96A9C /* ItemRowView.swift */; };
@@ -121,6 +122,7 @@
 		E2C5E7D41D792D51E611DECB /* UIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIModels.swift; sourceTree = "<group>"; };
 		EBB94CFC9660DF20EFC149A2 /* SettingsSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSidebarView.swift; sourceTree = "<group>"; };
 		ED0AED220E85ED339A70B5B1 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		F94EA5DAA7CCF82DCCF0BF0F /* FileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileHandler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -372,6 +374,7 @@
 		CA9C1DFD7758C8AB994E1C9E /* Handlers */ = {
 			isa = PBXGroup;
 			children = (
+				F94EA5DAA7CCF82DCCF0BF0F /* FileHandler.swift */,
 				984B67F9CB91A2F996B4A07D /* ImageHandler.swift */,
 				C98EF7B701B491E00CDF1503 /* TextHandler.swift */,
 				D819FAD1E8CB1D54D33859FE /* UnknownTypeLoggerHandler.swift */,
@@ -561,6 +564,7 @@
 				473A71ED932CDDA7512710FE /* CoreClient.swift in Sources */,
 				30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */,
 				1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */,
+				6ED60472D0AE19CA5B022C97 /* FileHandler.swift in Sources */,
 				44DC91BB83178829B21F39B0 /* GeneralSettingsPage.swift in Sources */,
 				CAB7A46434BB41B18875A49E /* HotkeyCapture.swift in Sources */,
 				F957A0E3EFE858B5CC4D3CB0 /* HotkeyManager.swift in Sources */,

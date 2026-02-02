@@ -167,6 +167,12 @@ final class AppStore: ObservableObject {
 
     func startMonitoring() {
         // Register clipboard content handlers
+        // IMPORTANT: Registration order matters! FileHandler must be registered
+        // BEFORE TextHandler to prevent file names from being captured as text.
+
+        // File handler (MUST be first to handle .file-url before .string)
+        let fileHandler = FileHandler()
+        monitor.handlerRegistry.register(fileHandler)
 
         // Text handler
         let textHandler = TextHandler(core: core) { [weak self] text, sourceApp in
