@@ -86,3 +86,15 @@ When modifying macOS app code (Swift/SwiftUI), follow this workflow:
 - **build_macos_app_bundle.sh**: Required when any code changes (to verify build)
 - **Running the app**: Optional, for quick manual verification
 
+---
+
+## Using Skills (OpenClaw)
+
+### Quick verify build
+
+```bash
+skill: macos-verify-build
+```
+
+This automates the macOS Development Workflow steps described above.
+
