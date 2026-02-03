@@ -48,12 +48,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.panelCoordinator.showPanel(rememberPreviousApp: false)
         }
+
     }
 
     @objc private func openSettings() {
         // Use the standard Settings action for SwiftUI apps
         // See: https://developer.apple.com/documentation/appkit/nsapplication/1428467-opensettings
-        NSApp.sendAction(#selector(self.openSettings), to: nil, from: nil)
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     private func handlePasteComplete(kind: String, text: String?) {
