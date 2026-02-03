@@ -105,6 +105,34 @@ struct ContentView: View {
         } message: {
             Text(deleteConfirmationMessage)
         }
+        // Tag Editor sheet
+        .sheet(item: $itemForTagEditor) { item in
+            TagEditorView(itemID: item.id, vm: vm) { changedItemID in
+                // Refresh tags for the modified item
+                vm.refreshTags(for: changedItemID)
+            }
+        }
+        // Handle tag editor request from keyboard shortcut (Cmd+T)
+        .onChange(of: vm.showTagEditor) { _, newValue in
+            if newValue {
+                if let selectedID = vm.tagEditorItemID,
+                   let item = vm.filteredItems.first(where: { $0.id == selectedID }) {
+                    itemForTagEditor = item
+                }
+                vm.showTagEditor = false
+            }
+        }
+        // Sync tag editor presentation state to ViewModel so PanelCoordinator knows to disable shortcuts
+        .onChange(of: itemForTagEditor) { _, item in
+            if item != nil {
+                vm.modalState = .deleteAlert // Use same modal state to disable shortcuts
+            } else {
+                // Only reset to none if delete confirmation is not also showing
+                if !showDeleteConfirmation {
+                    vm.modalState = .none
+                }
+            }
+        }
     }
 
     private func performDelete() {
@@ -121,9 +149,12 @@ struct ContentView: View {
     @State private var lastClickID: String?
     @State private var lastClickAt: Date?
 
-    // Delete confirmation state
+        // Delete confirmation state
     @State private var showDeleteConfirmation = false
     @State private var itemToDelete: Item?
+    
+    // Tag editor state
+    @State private var itemForTagEditor: Item?
 }
 
 // MARK: - Delete Confirmation Extension

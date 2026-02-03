@@ -83,3 +83,23 @@ func ct_settings_set_retention_max(_ core: UnsafeMutableRawPointer?, _ maxItems:
 
 @_silgen_name("ct_free")
 func ct_free(_ p: UnsafeMutableRawPointer?)
+
+// MARK: - Tags
+
+@_silgen_name("ct_items_add_tag")
+func ct_items_add_tag(_ core: UnsafeMutableRawPointer?, _ itemID: UnsafePointer<CChar>?, _ tagName: UnsafePointer<CChar>?, _ colorHex: UnsafePointer<CChar>?) -> Int32
+
+@_silgen_name("ct_items_remove_tag")
+func ct_items_remove_tag(_ core: UnsafeMutableRawPointer?, _ itemID: UnsafePointer<CChar>?, _ tagID: UnsafePointer<CChar>?) -> Int32
+
+@_silgen_name("ct_items_get_tags")
+func ct_items_get_tags(_ core: UnsafeMutableRawPointer?, _ itemID: UnsafePointer<CChar>?, _ outJSON: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+
+@_silgen_name("ct_tags_list")
+func ct_tags_list(_ core: UnsafeMutableRawPointer?, _ outJSON: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> Int32
+
+@_silgen_name("ct_tags_rename")
+func ct_tags_rename(_ core: UnsafeMutableRawPointer?, _ tagID: UnsafePointer<CChar>?, _ newName: UnsafePointer<CChar>?) -> Int32
+
+@_silgen_name("ct_tags_delete")
+func ct_tags_delete(_ core: UnsafeMutableRawPointer?, _ tagID: UnsafePointer<CChar>?) -> Int32

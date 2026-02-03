@@ -308,4 +308,87 @@ final class CoreClient {
     static func lastError() -> String {
         ct_last_error_message().map { String(cString: $0) } ?? "(no error message)"
     }
+
+    // MARK: - Tags
+
+    func addTag(itemID: String, tagName: String, colorHex: String? = nil) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = itemID.withCString { cid in
+            tagName.withCString { cname in
+                colorHex?.withCString { ccolor in
+                    ct_items_add_tag(core, cid, cname, ccolor)
+                } ?? ct_items_add_tag(core, cid, cname, nil)
+            }
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
+    func removeTag(itemID: String, tagID: String) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = itemID.withCString { cid in
+            tagID.withCString { ctid in
+                ct_items_remove_tag(core, cid, ctid)
+            }
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
+    func getTags(itemID: String) throws -> [ItemTag] {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = itemID.withCString { cid in
+            ct_items_get_tags(core, cid, &out)
+        }
+        if rc != 0 {
+            let errMsg = Self.lastError()
+            print("[CoreClient] getTags failed: rc=\(rc), error=\(errMsg)")
+            throw CoreError.rc(rc, errMsg)
+        }
+        guard let out else {
+            print("[CoreClient] getTags: out is nil despite rc=0")
+            throw CoreError.rc(-1, "getTags returned nil")
+        }
+        defer { ct_free(out) }
+        let json = String(cString: out)
+        print("[CoreClient] getTags JSON: \(json)")
+        return try JSONDecoder().decode([ItemTag].self, from: Data(json.utf8))
+    }
+
+    func listTags() throws -> [TagWithCount] {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        var out: UnsafeMutablePointer<CChar>? = nil
+        let rc = ct_tags_list(core, &out)
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+        defer { if let out { ct_free(out) } }
+        let json = String(cString: out!)
+        return try JSONDecoder().decode([TagWithCount].self, from: Data(json.utf8))
+    }
+
+    func renameTag(tagID: String, newName: String) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = tagID.withCString { ctid in
+            newName.withCString { cname in
+                ct_tags_rename(core, ctid, cname)
+            }
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
+    func deleteTag(tagID: String) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = tagID.withCString { ctid in
+            ct_tags_delete(core, ctid)
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
 }

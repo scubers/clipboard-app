@@ -39,4 +39,12 @@ final class CoreClipboardRepository: ClipboardRepository {
 
     func exportToDir(_ path: String) throws { try core.exportToDir(path) }
     func importFromDir(_ path: String, keepBackup: Bool) throws { try core.importFromDir(path, keepBackup: keepBackup) }
+
+    // Tags
+    func getTags(itemID: String) throws -> [ItemTag] { try core.getTags(itemID: itemID) }
+    func addTag(itemID: String, tagName: String) throws { try core.addTag(itemID: itemID, tagName: tagName) }
+    func removeTag(itemID: String, tagID: String) throws { try core.removeTag(itemID: itemID, tagID: tagID) }
+    func listTags() throws -> [TagWithCount] { try core.listTags() }
+    func renameTag(tagID: String, newName: String) throws { try core.renameTag(tagID: tagID, newName: newName) }
+    func deleteTag(tagID: String) throws { try core.deleteTag(tagID: tagID) }
 }

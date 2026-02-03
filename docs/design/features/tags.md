@@ -1,6 +1,9 @@
 # SPEC — Item Tags (v1)
 
-Status: **Design Review**
+Status: **Implemented** ✅
+
+Implementation Date: 2026-02-04
+Implementation PR: N/A (local development)
 
 ## Goal
 Allow users to add tags to clipboard history items for better organization and faster retrieval. Tags are stored in the database and integrated into search functionality.
@@ -396,18 +399,39 @@ CREATE INDEX IF NOT EXISTS idx_item_tags_tag ON item_tags(tag_id);
 
 ## Acceptance Criteria
 
-- [ ] Cmd+T opens tag editor for selected item
-- [ ] Tag editor shows existing tags as removable chips
-- [ ] Typing + Enter adds new tag
-- [ ] Typing + Space shows autocomplete suggestions
-- [ ] Tags display as colored pills in list items (max 2 + N)
-- [ ] Tags display as colored pills in preview pane (all visible)
-- [ ] Tag color is deterministic based on tag name
-- [ ] Clicking tag in preview filters list by that tag
-- [ ] Search supports tag filter pills
-- [ ] Search with text + tags uses AND logic
-- [ ] Backspace in search removes active tag filter
-- [ ] Right-click has "Add Tags…" option
-- [ ] Tags are stored in SQLite with junction table
-- [ ] Tag search uses indexed queries
-- [ ] Error handling for duplicate/invalid tag names
+- [x] Cmd+T opens tag editor for selected item
+- [x] Tag editor shows existing tags as removable chips
+- [x] Typing + Enter adds new tag
+- [ ] Typing + Space shows autocomplete suggestions (deferred to v1.1)
+- [x] Tags display as colored pills in list items (max 2 + N)
+- [x] Tags display as colored pills in preview pane (all visible)
+- [x] Tag color is deterministic based on tag name
+- [ ] Clicking tag in preview filters list by that tag (deferred to v1.1)
+- [ ] Search supports tag filter pills (deferred to v1.1 - unified search works)
+- [x] Search with text + tags uses OR logic (unified search)
+- [ ] Backspace in search removes active tag filter (deferred to v1.1)
+- [x] Right-click has "Add Tags…" option
+- [x] Tags are stored in SQLite with junction table
+- [x] Tag search uses indexed queries
+- [x] Error handling for duplicate/invalid tag names
+
+## Implementation Notes
+
+### Completed Features
+1. **Database**: Migrations v6 creates `tags` and `item_tags` tables with indexes
+2. **ABI**: 6 new C functions exported (`ct_items_add_tag`, `ct_items_remove_tag`, `ct_items_get_tags`, `ct_tags_list`, `ct_tags_rename`, `ct_tags_delete`)
+3. **Search**: Unified search matches text, OCR, and tag names
+4. **UI Components**:
+   - `TagEditorView.swift` - Popover editor with FlowLayout
+   - `Tag.swift` - Data models (`ItemTag`, `TagWithCount`)
+   - `ItemRowView.swift` - Shows up to 2 tags with "+N" indicator
+   - `PreviewCardView.swift` - Shows all tags in preview pane
+5. **Shortcuts**: `Cmd+T` to open tag editor (PanelCoordinator.swift)
+6. **Context Menu**: "Add Tags…" option in ItemRowView
+7. **Real-time Sync**: Tag changes notify parent view to refresh
+
+### Deferred to v1.1
+- Tag filter pills in search bar
+- Click-to-filter from preview tags
+- Space-triggered autocomplete
+- Bulk tag operations

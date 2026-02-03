@@ -2,11 +2,13 @@ import SwiftUI
 
 struct ItemRowView: View {
     let item: Item
+    let tags: [ItemTag]
     let selected: Bool
     let isDeleting: Bool
     let onDelete: () -> Void
     let onCopy: () -> Void
     let onPaste: () -> Void
+    let onAddTags: () -> Void
 
     private var timeText: String {
         let ts = TimeInterval(item.lastCopiedAtMs) / 1000
@@ -106,6 +108,29 @@ struct ItemRowView: View {
                             .foregroundStyle(.yellow)
                             .padding(.leading, 2)
                     }
+                    
+                    // Tags - max 2 visible, show +N if more
+                    if !tags.isEmpty {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        
+                        HStack(spacing: 4) {
+                            ForEach(tags.prefix(2)) { tag in
+                                TagChipSmall(tag: tag)
+                            }
+                            if tags.count > 2 {
+                                Text("+\(tags.count - 2)")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .fill(Color.primary.opacity(0.08))
+                                    )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -134,9 +159,33 @@ struct ItemRowView: View {
             
             Divider()
             
+            Button("Add Tags…") {
+                onAddTags()
+            }
+            
+            Divider()
+            
             Button("Delete…") {
                 onDelete()
             }
         }
+    }
+}
+
+// MARK: - Small Tag Chip for ItemRow
+
+struct TagChipSmall: View {
+    let tag: ItemTag
+    
+    var body: some View {
+        Text(tag.name)
+            .font(.system(size: 10, weight: .semibold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(hex: tag.colorHex)?.opacity(0.12) ?? Color.gray.opacity(0.12))
+            )
+            .foregroundStyle(Color(hex: tag.colorHex) ?? .gray)
     }
 }

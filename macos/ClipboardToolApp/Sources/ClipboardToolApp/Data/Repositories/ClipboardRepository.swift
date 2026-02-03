@@ -40,4 +40,12 @@ protocol ClipboardRepository {
     // Transfer
     func exportToDir(_ path: String) throws
     func importFromDir(_ path: String, keepBackup: Bool) throws
+    
+    // Tags
+    func getTags(itemID: String) throws -> [ItemTag]
+    func addTag(itemID: String, tagName: String) throws
+    func removeTag(itemID: String, tagID: String) throws
+    func listTags() throws -> [TagWithCount]
+    func renameTag(tagID: String, newName: String) throws
+    func deleteTag(tagID: String) throws
 }

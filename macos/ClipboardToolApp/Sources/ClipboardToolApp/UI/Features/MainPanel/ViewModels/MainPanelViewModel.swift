@@ -30,6 +30,9 @@ final class MainPanelViewModel: ObservableObject {
     @Published var previewImage: NSImage?
     @Published var error: String?
     
+    // Tags cache: itemID -> tags
+    @Published var itemTags: [String: [ItemTag]] = [:]
+    
     // IDs of items being deleted (for fade-out animation)
     @Published var deletingItemIDs: Set<String> = []
     
@@ -55,7 +58,7 @@ final class MainPanelViewModel: ObservableObject {
     }
 
     private let store = AppStore.shared
-    private var repo: ClipboardRepository { store.clipboardRepo }
+    var repo: ClipboardRepository { store.clipboardRepo }
     private var monitor: PasteboardMonitor { store.monitor }
 
     private enum Keys {
@@ -138,17 +141,48 @@ final class MainPanelViewModel: ObservableObject {
                 if q.isEmpty {
                     items = try repo.list(limit: 200, offset: 0)
                     applyFilterAndSelection()
+                    loadTagsForVisibleItems()
                     return
                 }
 
                 // 1) Initial search (may include OCR hits already).
                 items = try repo.search(q, limit: 200, offset: 0)
                 applyFilterAndSelection()
+                loadTagsForVisibleItems()
 
                 // 2) On-demand OCR (queue): keep draining backlog serially with low intensity.
                 store.ocrQueue.kick(core: store.core)
             } catch {
                 self.error = String(describing: error)
+            }
+        }
+    }
+
+    private func loadTagsForVisibleItems() {
+        Task { @MainActor in
+            for item in items {
+                do {
+                    let tags = try repo.getTags(itemID: item.id)
+                    itemTags[item.id] = tags
+                } catch {
+                    // Silently fail for tags
+                }
+            }
+        }
+    }
+
+    func getTags(for itemID: String) -> [ItemTag] {
+        return itemTags[itemID] ?? []
+    }
+
+    func refreshTags(for itemID: String) {
+        Task { @MainActor in
+            do {
+                let tags = try repo.getTags(itemID: itemID)
+                itemTags[itemID] = tags
+                print("[MainPanelViewModel] Refreshed tags for item \(itemID): \(tags.count) tags")
+            } catch {
+                print("[MainPanelViewModel] Failed to refresh tags: \(error)")
             }
         }
     }
@@ -301,6 +335,17 @@ final class MainPanelViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Tag Editor
+    
+    @Published var showTagEditor = false
+    @Published var tagEditorItemID: String? = nil
+    
+    func openTagEditor() {
+        guard let selectedID = selectedID else { return }
+        tagEditorItemID = selectedID
+        showTagEditor = true
+    }
+    
     // MARK: - Delete Item
 
     /// Request deletion of the currently selected item (triggered by Cmd+D shortcut)

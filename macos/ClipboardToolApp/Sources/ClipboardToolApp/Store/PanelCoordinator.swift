@@ -130,6 +130,13 @@ final class PanelCoordinator {
                         return nil
                     }
                     return event
+                case 17: // 't' key - check for Cmd+T
+                    if event.modifierFlags.contains(.command) {
+                        // Cmd+T: Open tag editor for selected item
+                        self.viewModel?.openTagEditor()
+                        return nil
+                    }
+                    return event
                 default:
                     return event
                 }

@@ -11,6 +11,7 @@
 		1040765D4A5FB29F89426FA8 /* ExportImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0714EBB2913B26EBA9A3D27 /* ExportImportView.swift */; };
 		126E0254E09309AAAA3A42E0 /* MainPanelListPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF5D8AF0618AC8E3245C06E /* MainPanelListPane.swift */; };
 		1588BA02AD306AC34D6B2A91 /* PasteboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21F8BC899F7F5FE4CD0E97A1 /* PasteboardMonitor.swift */; };
+		1B461E9630C1CBBF9CF85FCA /* Tag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622190CEF05431EF12499BD4 /* Tag.swift */; };
 		2C192C7488484528D1C0BA6D /* PreviewSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3857907E192E9BAD4D047E /* PreviewSettingsPage.swift */; };
 		30B85AFD42F59D17B42F271D /* CoreClipboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260DE8D5AB7AC73C9E0DE948 /* CoreClipboardRepository.swift */; };
 		337BBC3F74765F266BD83D06 /* ImageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984B67F9CB91A2F996B4A07D /* ImageHandler.swift */; };
@@ -28,6 +29,7 @@
 		648FF37CFAB721D719CC96A1 /* ClipboardToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963A1CCCCCE66388EBCEB6B7 /* ClipboardToolApp.swift */; };
 		649DB77AED3C64F0FEB9D56F /* SettingsSidebarRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3431E893278279154F87BB2D /* SettingsSidebarRow.swift */; };
 		6546F254686C0E7D2A29AFF9 /* MainPanelPreviewPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E958432422909369CF86B /* MainPanelPreviewPane.swift */; };
+		65750196DBE30C9BF09EA524 /* TagEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 425E4E66801F27F1BA1D2E7C /* TagEditorView.swift */; };
 		66050F5D9D2D19606FA69BFB /* MainPanelFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C4445A65E70C97CB5616F2B /* MainPanelFooter.swift */; };
 		6E72FBC8E448CCED6E3ED9A9 /* AdvancedSettingsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5840C01AAA4417F0FAD68497 /* AdvancedSettingsPage.swift */; };
 		6ED60472D0AE19CA5B022C97 /* FileHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94EA5DAA7CCF82DCCF0BF0F /* FileHandler.swift */; };
@@ -80,6 +82,7 @@
 		34AA1D81494529E932E79B73 /* ClipboardTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipboardTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		38DD235D10F32FBF5FB11F4D /* AppPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPaths.swift; sourceTree = "<group>"; };
 		3ECFCB0B047000ABC95D2C83 /* ClipboardHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHandler.swift; sourceTree = "<group>"; };
+		425E4E66801F27F1BA1D2E7C /* TagEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagEditorView.swift; sourceTree = "<group>"; };
 		4CB67B95E6D031BA58E851D4 /* OCRQueueManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRQueueManager.swift; sourceTree = "<group>"; };
 		4F17AF90735A2ACECB0A09B2 /* MacOSConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSConfigStore.swift; sourceTree = "<group>"; };
 		53EE5E60E10FE7626A05C2FF /* WindowChromeTuner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowChromeTuner.swift; sourceTree = "<group>"; };
@@ -88,6 +91,7 @@
 		5E8768EA85A0154395330C46 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
 		618614560524FACC30B08027 /* AppRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelauncher.swift; sourceTree = "<group>"; };
 		61FEB3E7CF2DAB55C0CE10C5 /* CoreBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreBridge.swift; sourceTree = "<group>"; };
+		622190CEF05431EF12499BD4 /* Tag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tag.swift; sourceTree = "<group>"; };
 		6A8AC49E2A83DE7FF7A1B849 /* MainPanelSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanelSearchBar.swift; sourceTree = "<group>"; };
 		6C3C410069C04FC9ACA7C72D /* ClipboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardRepository.swift; sourceTree = "<group>"; };
 		6E36DA9B2314E3D71E8DD58A /* HotkeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRecorder.swift; sourceTree = "<group>"; };
@@ -131,6 +135,7 @@
 			children = (
 				7C6461DC065611310C5BC4F9 /* Item.swift */,
 				CC445A06A2C652C0853CB0C3 /* PreviewSettings.swift */,
+				622190CEF05431EF12499BD4 /* Tag.swift */,
 				E2C5E7D41D792D51E611DECB /* UIModels.swift */,
 			);
 			path = Models;
@@ -141,6 +146,7 @@
 			children = (
 				0FB9A3617F0B1B2D386481B4 /* PillButton.swift */,
 				17F45E5FDFA5DF994E20D792 /* SettingsUIComponents.swift */,
+				425E4E66801F27F1BA1D2E7C /* TagEditorView.swift */,
 				851EA549331DEE8F76F38EEA /* VisualEffectMaterial.swift */,
 				53EE5E60E10FE7626A05C2FF /* WindowChromeTuner.swift */,
 			);
@@ -599,6 +605,8 @@
 				46FE378C22CFBFC6F9568E13 /* ShortcutsSettingsPage.swift in Sources */,
 				A766ABB8511F908782E130FC /* Stats.swift in Sources */,
 				5F39A6150133CACCCBC17843 /* StorageSettingsPage.swift in Sources */,
+				1B461E9630C1CBBF9CF85FCA /* Tag.swift in Sources */,
+				65750196DBE30C9BF09EA524 /* TagEditorView.swift in Sources */,
 				7C46B9AF7135D6CDA82FE3E7 /* TextHandler.swift in Sources */,
 				97FF8CE2575B05C593133396 /* UIModels.swift in Sources */,
 				CF00CFC5701FFA5D46C65076 /* UnknownTypeLoggerHandler.swift in Sources */,

@@ -69,7 +69,7 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 				toks = []string{q}
 			}
 			ocrWhere := make([]string, 0, len(toks))
-			args := make([]any, 0, 1+len(toks)+2)
+			args := make([]any, 0, 1+len(toks)+2+1) // +1 for tag match
 			for _, t := range toks {
 				ocrWhere = append(ocrWhere, "items.ocr_text LIKE ?")
 				args = append(args, "%"+t+"%")
@@ -80,6 +80,7 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 				baseWhere += " AND items.deleted_at_ms IS NULL"
 			}
 
+			tagPattern := "%" + q + "%"
 			qsql := fmt.Sprintf(`WITH hits AS (
 				SELECT items.id AS id, 0 AS ocrMatched
 				FROM items
@@ -92,6 +93,12 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 				AND items.type='image'
 				AND items.ocr_status=1
 				AND (%s)
+				UNION ALL
+				SELECT items.id AS id, 0 AS ocrMatched
+				FROM items
+				JOIN item_tags it ON it.item_id = items.id
+				JOIN tags t ON t.id = it.tag_id
+				%s AND t.name LIKE ?
 			), dedup AS (
 				SELECT id, MAX(ocrMatched) AS ocrMatched FROM hits GROUP BY id
 			)
@@ -99,10 +106,10 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 			FROM items
 			JOIN dedup ON dedup.id = items.id
 			ORDER BY items.pinned DESC, items.last_copied_at_ms DESC, items.created_at_ms DESC
-			LIMIT ? OFFSET ?`, baseWhere, baseWhere, strings.Join(ocrWhere, " OR "))
+			LIMIT ? OFFSET ?`, baseWhere, baseWhere, strings.Join(ocrWhere, " OR "), baseWhere)
 
 			args = append([]any{ftsq}, args...)
-			args = append(args, l, o)
+			args = append(args, tagPattern, l, o)
 
 			rows, err := db.Query(qsql, args...)
 			if err == nil {
@@ -132,6 +139,14 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 		argsOCR = append(argsOCR, "%"+t+"%")
 	}
 
+	// Also search for items with tags matching the query
+	tagPattern := "%" + q + "%"
+
+	itemWhere := "WHERE 1=1"
+	if includeDeleted == 0 {
+		itemWhere += " AND items.deleted_at_ms IS NULL"
+	}
+
 	qsql := fmt.Sprintf(`WITH hits AS (
 		SELECT id, 0 AS ocrMatched
 		FROM items
@@ -143,6 +158,12 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 		AND type='image'
 		AND ocr_status=1
 		AND (%s)
+		UNION ALL
+		SELECT items.id AS id, 0 AS ocrMatched
+		FROM items
+		JOIN item_tags it ON it.item_id = items.id
+		JOIN tags t ON t.id = it.tag_id
+		%s AND t.name LIKE ?
 	), dedup AS (
 		SELECT id, MAX(ocrMatched) AS ocrMatched FROM hits GROUP BY id
 	)
@@ -150,11 +171,11 @@ func ct_items_search_json_ex(corePtr *C.void, queryUTF8 *C.char, limit C.int, of
 	FROM items
 	JOIN dedup ON dedup.id = items.id
 	ORDER BY items.pinned DESC, items.last_copied_at_ms DESC, items.created_at_ms DESC
-	LIMIT ? OFFSET ?`, where, where, strings.Join(ocrWhere, " OR "))
+	LIMIT ? OFFSET ?`, where, where, strings.Join(ocrWhere, " Or "), itemWhere)
 
 	args := []any{pattern, pattern}
 	args = append(args, argsOCR...)
-	args = append(args, l, o)
+	args = append(args, tagPattern, l, o)
 
 	rows, err := db.Query(qsql, args...)
 	if err != nil {

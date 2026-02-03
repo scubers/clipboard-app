@@ -14,6 +14,10 @@ struct MainPanelListPane: View {
     // Delete confirmation state
     @State private var showDeleteConfirmation = false
     @State private var itemToDelete: Item?
+    
+    // Tag editor state
+    @State private var showTagEditor = false
+    @State private var itemForTagEditor: Item?
 
     var body: some View {
         let items = vm.filteredItems
@@ -57,6 +61,13 @@ struct MainPanelListPane: View {
         } message: {
             Text(deleteConfirmationMessage)
         }
+        // Tag Editor sheet
+        .sheet(item: $itemForTagEditor) { item in
+            TagEditorView(itemID: item.id, vm: vm) { changedItemID in
+                // Refresh tags for the modified item
+                vm.refreshTags(for: changedItemID)
+            }
+        }
     }
 
     private var deleteConfirmationTitle: String {
@@ -80,11 +91,13 @@ struct MainPanelListPane: View {
     private func makeItemRow(item: Item, proxy: ScrollViewProxy) -> some View {
         ItemRowView(
             item: item,
+            tags: vm.getTags(for: item.id),
             selected: vm.selectedID == item.id,
             isDeleting: vm.isDeleting(id: item.id),
             onDelete: { handleDelete(item: item) },
             onCopy: { handleCopy(item: item) },
-            onPaste: { handlePaste(item: item) }
+            onPaste: { handlePaste(item: item) },
+            onAddTags: { handleAddTags(item: item) }
         )
         .id(item.id)
         .contentShape(Rectangle())
@@ -124,6 +137,12 @@ struct MainPanelListPane: View {
     private func handlePaste(item: Item) {
         vm.selectedID = item.id
         vm.pasteSelectedToPreviousApp()
+    }
+
+    private func handleAddTags(item: Item) {
+        vm.selectedID = item.id
+        itemForTagEditor = item
+        showTagEditor = true
     }
 
     private func scrollIfNeeded(proxy: ScrollViewProxy, oldValue: String?, newValue: String?) {

@@ -33,6 +33,17 @@ struct PreviewCardView: View {
                         }
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
+                        
+                        // Tags - all visible
+                        let tags = vm.getTags(for: item.id)
+                        if !tags.isEmpty {
+                            FlowLayout(spacing: 6) {
+                                ForEach(tags) { tag in
+                                    TagChip(tag: tag, onRemove: nil)
+                                }
+                            }
+                            .padding(.top, 4)
+                        }
                     } else {
                         Text("(No selection)")
                             .font(.system(size: 12))
