@@ -54,7 +54,8 @@ struct ContentView: View {
                     visibleIDs: $visibleIDs,
                     lastSelectedID: $lastSelectedID,
                     lastClickID: $lastClickID,
-                    lastClickAt: $lastClickAt
+                    lastClickAt: $lastClickAt,
+                    onDelete: { showDeleteConfirmationForSelectedItem() }
                 )
 
                 MainPanelFooter(count: vm.filteredItems.count)
@@ -78,6 +79,32 @@ struct ContentView: View {
                 }
             }
         }
+        // Handle delete request from keyboard shortcut (Cmd+D)
+        .onChange(of: vm.deleteRequest) { _, newRequest in
+            if let item = newRequest {
+                itemToDelete = item
+                showDeleteConfirmation = true
+                // Clear the request after handling
+                vm.deleteRequest = nil
+            }
+        }
+        .alert(deleteConfirmationTitle, isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                itemToDelete = nil
+            }
+            Button(itemToDelete?.pinned == true ? "Delete Anyway" : "Delete", role: .destructive) {
+                performDelete()
+            }
+        } message: {
+            Text(deleteConfirmationMessage)
+        }
+    }
+
+    private func performDelete() {
+        guard let item = itemToDelete else { return }
+        vm.deleteItem(id: item.id, isPinned: item.pinned, confirmCallback: nil) { _ in
+            itemToDelete = nil
+        }
     }
 
     @State private var visibleIDs: Set<String> = []
@@ -86,4 +113,41 @@ struct ContentView: View {
     // For manual double-click detection (to keep single-click instantaneous).
     @State private var lastClickID: String?
     @State private var lastClickAt: Date?
+
+    // Delete confirmation state
+    @State private var showDeleteConfirmation = false
+    @State private var itemToDelete: Item?
+}
+
+// MARK: - Delete Confirmation Extension
+
+extension ContentView {
+    /// Show delete confirmation for the currently selected item
+    func showDeleteConfirmationForSelectedItem() {
+        guard let selectedID = vm.selectedID,
+              let item = vm.filteredItems.first(where: { $0.id == selectedID }) else {
+            return
+        }
+        itemToDelete = item
+        showDeleteConfirmation = true
+    }
+
+    /// Show delete confirmation for an item
+    func confirmDelete(item: Item) {
+        itemToDelete = item
+        showDeleteConfirmation = true
+    }
+
+    /// Get confirmation dialog title based on item pinned state
+    var deleteConfirmationTitle: String {
+        itemToDelete?.pinned == true ? "Delete pinned item?" : "Delete item?"
+    }
+
+    /// Get confirmation dialog message based on item pinned state
+    var deleteConfirmationMessage: String {
+        if itemToDelete?.pinned == true {
+            return "This item is pinned. Deleting it will permanently remove it from your clipboard history."
+        }
+        return "This will permanently delete this item from your clipboard history."
+    }
 }

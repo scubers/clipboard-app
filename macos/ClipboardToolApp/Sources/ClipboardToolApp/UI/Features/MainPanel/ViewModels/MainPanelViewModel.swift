@@ -29,6 +29,12 @@ final class MainPanelViewModel: ObservableObject {
     @Published var previewText: String = ""
     @Published var previewImage: NSImage?
     @Published var error: String?
+    
+    // IDs of items being deleted (for fade-out animation)
+    @Published var deletingItemIDs: Set<String> = []
+    
+    // Delete request for keyboard shortcut (Cmd+D) - triggers confirmation dialog in UI
+    @Published var deleteRequest: Item?
 
     private let store = AppStore.shared
     private var repo: ClipboardRepository { store.clipboardRepo }
@@ -275,6 +281,110 @@ final class MainPanelViewModel: ObservableObject {
         } catch {
             self.error = String(describing: error)
         }
+    }
+
+    // MARK: - Delete Item
+
+    /// Request deletion of the currently selected item (triggered by Cmd+D shortcut)
+    /// Sets deleteRequest which ContentView observes to show confirmation dialog
+    func requestDeleteSelected() {
+        guard let id = selectedID,
+              let item = filteredItems.first(where: { $0.id == id }) else {
+            return
+        }
+        deleteRequest = item
+    }
+
+    /// Delete an item with optional confirmation callback
+    /// - Parameters:
+    ///   - id: The item ID to delete
+    ///   - isPinned: Whether the item is pinned (affects confirmation message)
+    ///   - confirmCallback: Optional callback to show confirmation dialog (returns true if confirmed)
+    ///   - completion: Called after deletion completes (success or failure)
+    func deleteItem(
+        id: String,
+        isPinned: Bool,
+        confirmCallback: ((String, String, @escaping (Bool) -> Void) -> Void)? = nil,
+        completion: ((Bool) -> Void)? = nil
+    ) {
+        // If confirmation is needed, call the callback
+        if let confirmCallback = confirmCallback {
+            let title = isPinned ? "Delete pinned item?" : "Delete item?"
+            let message = isPinned
+                ? "This item is pinned. Deleting it will permanently remove it from your clipboard history."
+                : "This will permanently delete this item from your clipboard history."
+            
+            confirmCallback(title, message) { [weak self] confirmed in
+                if confirmed {
+                    self?.performDelete(id: id, completion: completion)
+                } else {
+                    completion?(false)
+                }
+            }
+        } else {
+            performDelete(id: id, completion: completion)
+        }
+    }
+
+    /// Perform the actual deletion with animation
+    private func performDelete(id: String, completion: ((Bool) -> Void)? = nil) {
+        // Mark as deleting for animation
+        deletingItemIDs.insert(id)
+        
+        // Animate the fade-out before actual deletion
+        Task { @MainActor in
+            // Wait for fade-out animation (200ms)
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            
+            do {
+                try repo.deleteItem(id: id)
+                
+                // Handle selection after delete
+                if selectedID == id {
+                    handleSelectionAfterDelete(deletedID: id)
+                }
+                
+                // Remove from deleting set and refresh
+                deletingItemIDs.remove(id)
+                refresh()
+                
+                // Increment items version to trigger UI updates
+                store.incrementItemsVersion()
+                
+                completion?(true)
+            } catch {
+                // Remove from deleting set on error
+                deletingItemIDs.remove(id)
+                self.error = String(describing: error)
+                completion?(false)
+            }
+        }
+    }
+
+    /// Handle selection after an item is deleted
+    private func handleSelectionAfterDelete(deletedID: String) {
+        guard !filteredItems.isEmpty else {
+            selectedID = nil
+            return
+        }
+        
+        // Find the index of the deleted item
+        if let idx = filteredItems.firstIndex(where: { $0.id == deletedID }) {
+            // Try to select next item, or previous if no next
+            let nextIdx = min(idx, filteredItems.count - 1)
+            if nextIdx < filteredItems.count {
+                selectedID = filteredItems[nextIdx].id
+            } else {
+                selectedID = filteredItems.first?.id
+            }
+        } else {
+            selectedID = filteredItems.first?.id
+        }
+    }
+
+    /// Check if an item is being deleted (for animation)
+    func isDeleting(id: String) -> Bool {
+        deletingItemIDs.contains(id)
     }
 
     private func writeImageToPasteboard(filePath: String) throws {

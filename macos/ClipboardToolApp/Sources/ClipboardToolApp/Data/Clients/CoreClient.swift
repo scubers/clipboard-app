@@ -275,6 +275,16 @@ final class CoreClient {
         }
     }
 
+    func deleteItem(id: String) throws {
+        guard let core else { throw CoreError.rc(-1, "core not opened") }
+        let rc = id.withCString { cid in
+            ct_items_delete_physical(core, cid)
+        }
+        if rc != 0 {
+            throw CoreError.rc(rc, Self.lastError())
+        }
+    }
+
     func exportToDir(_ path: String) throws {
         guard let core else { throw CoreError.rc(-1, "core not opened") }
         let rc = path.withCString { cpath in

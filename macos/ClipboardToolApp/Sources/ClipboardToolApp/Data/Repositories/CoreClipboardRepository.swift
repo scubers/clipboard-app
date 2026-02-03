@@ -35,6 +35,7 @@ final class CoreClipboardRepository: ClipboardRepository {
     func integrityCheck() throws -> IntegrityResult { try core.integrityCheck() }
 
     func removeHistory(keepPinned: Bool) throws { try core.removeHistory(keepPinned: keepPinned) }
+    func deleteItem(id: String) throws { try core.deleteItem(id: id) }
 
     func exportToDir(_ path: String) throws { try core.exportToDir(path) }
     func importFromDir(_ path: String, keepBackup: Bool) throws { try core.importFromDir(path, keepBackup: keepBackup) }

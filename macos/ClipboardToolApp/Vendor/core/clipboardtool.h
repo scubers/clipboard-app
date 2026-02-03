@@ -39,6 +39,12 @@ static uintptr_t ct_thread_id() {
 
 #line 1 "cgo-generated-wrapper"
 
+#line 3 "delete.go"
+
+#include <stdlib.h>
+
+#line 1 "cgo-generated-wrapper"
+
 #line 3 "integrity.go"
 
 #include <stdlib.h>
@@ -159,6 +165,13 @@ extern int ct_core_open(char* dataDir, void** outCore);
 extern int ct_core_close(void* cptr);
 extern int ct_db_vacuum(void* corePtr);
 extern int ct_db_optimize(void* corePtr);
+
+// ct_items_delete_physical physically deletes a single item and its blob file if applicable.
+// - Deletes the item row from SQLite
+// - For image items, deletes the associated blob file from data/blobs/
+// - Returns CT_OK on success, error code on failure
+//
+extern int ct_items_delete_physical(void* corePtr, char* id);
 extern int ct_db_integrity_check_json(void* corePtr, char** outJSON);
 extern int ct_items_add_text(void* corePtr, char* textUTF8, char* sourceApp, long long createdAtMs, char** outID);
 extern int ct_items_add_image(void* corePtr, char* mimeC, void* dataPtr, int dataLen, char* sourceApp, long long createdAtMs, char** outID);

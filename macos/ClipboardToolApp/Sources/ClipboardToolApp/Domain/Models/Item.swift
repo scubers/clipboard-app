@@ -1,6 +1,6 @@
 import Foundation
 
-struct Item: Codable, Identifiable {
+struct Item: Codable, Identifiable, Equatable {
     let id: String
     let createdAtMs: Int64
     let lastCopiedAtMs: Int64

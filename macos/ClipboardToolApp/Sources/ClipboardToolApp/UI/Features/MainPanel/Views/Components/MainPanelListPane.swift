@@ -11,6 +11,10 @@ struct MainPanelListPane: View {
     @Binding var lastClickID: String?
     @Binding var lastClickAt: Date?
 
+    // Delete confirmation state
+    @State private var showDeleteConfirmation = false
+    @State private var itemToDelete: Item?
+
     var body: some View {
         let items = vm.filteredItems
 
@@ -18,12 +22,7 @@ struct MainPanelListPane: View {
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(items) { item in
-                        ItemRowView(item: item, selected: vm.selectedID == item.id)
-                            .id(item.id)
-                            .contentShape(Rectangle())
-                            .onTapGesture { handleRowTap(itemID: item.id) }
-                            .onAppear { visibleIDs.insert(item.id) }
-                            .onDisappear { visibleIDs.remove(item.id) }
+                        makeItemRow(item: item, proxy: proxy)
                     }
                 }
                 .padding(2)
@@ -41,6 +40,50 @@ struct MainPanelListPane: View {
             }
         }
         .focused(focus, equals: .list)
+        .alert(deleteConfirmationTitle, isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                itemToDelete = nil
+            }
+            Button(itemToDelete?.pinned == true ? "Delete Anyway" : "Delete", role: .destructive) {
+                performDelete()
+            }
+        } message: {
+            Text(deleteConfirmationMessage)
+        }
+    }
+
+    private var deleteConfirmationTitle: String {
+        itemToDelete?.pinned == true ? "Delete pinned item?" : "Delete item?"
+    }
+
+    private var deleteConfirmationMessage: String {
+        if itemToDelete?.pinned == true {
+            return "This item is pinned. Deleting it will permanently remove it from your clipboard history."
+        }
+        return "This will permanently delete this item from your clipboard history."
+    }
+
+    private func performDelete() {
+        guard let item = itemToDelete else { return }
+        vm.deleteItem(id: item.id, isPinned: item.pinned, confirmCallback: nil) { _ in
+            itemToDelete = nil
+        }
+    }
+
+    private func makeItemRow(item: Item, proxy: ScrollViewProxy) -> some View {
+        ItemRowView(
+            item: item,
+            selected: vm.selectedID == item.id,
+            isDeleting: vm.isDeleting(id: item.id),
+            onDelete: { handleDelete(item: item) },
+            onCopy: { handleCopy(item: item) },
+            onPaste: { handlePaste(item: item) }
+        )
+        .id(item.id)
+        .contentShape(Rectangle())
+        .onTapGesture { handleRowTap(itemID: item.id) }
+        .onAppear { visibleIDs.insert(item.id) }
+        .onDisappear { visibleIDs.remove(item.id) }
     }
 
     private func handleRowTap(itemID: String) {
@@ -58,6 +101,22 @@ struct MainPanelListPane: View {
             lastClickID = itemID
             lastClickAt = now
         }
+    }
+
+    private func handleDelete(item: Item) {
+        vm.selectedID = item.id
+        itemToDelete = item
+        showDeleteConfirmation = true
+    }
+
+    private func handleCopy(item: Item) {
+        vm.selectedID = item.id
+        vm.copySelectedToPasteboard()
+    }
+
+    private func handlePaste(item: Item) {
+        vm.selectedID = item.id
+        vm.pasteSelectedToPreviousApp()
     }
 
     private func scrollIfNeeded(proxy: ScrollViewProxy, oldValue: String?, newValue: String?) {

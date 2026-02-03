@@ -35,6 +35,7 @@ protocol ClipboardRepository {
     func integrityCheck() throws -> IntegrityResult
 
     func removeHistory(keepPinned: Bool) throws
+    func deleteItem(id: String) throws
 
     // Transfer
     func exportToDir(_ path: String) throws

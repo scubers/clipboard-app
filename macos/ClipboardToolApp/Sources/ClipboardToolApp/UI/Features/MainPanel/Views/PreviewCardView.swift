@@ -5,6 +5,7 @@ struct PreviewCardView: View {
     @ObservedObject var vm: MainPanelViewModel
     let wrap: Bool
     let monospace: Bool
+    let onDelete: () -> Void
 
     private var selectedItem: Item? {
         guard let id = vm.selectedID else { return nil }
@@ -83,6 +84,13 @@ struct PreviewCardView: View {
                 Button("Paste") { vm.pasteSelectedToPreviousApp() }
                     .buttonStyle(.borderedProminent)
                     .disabled(vm.selectedID == nil)
+
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.bordered)
+                .disabled(vm.selectedID == nil)
+                .help("Delete item")
 
                 // Press Enter to paste (invisible button)
                 Button("", action: { vm.pasteSelectedToPreviousApp() })

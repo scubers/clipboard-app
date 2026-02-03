@@ -98,14 +98,14 @@ When deleting an image item:
 
 | Key | Action | Confirm Required |
 |------|---------|------------------|
-| **Backspace** | Delete selected item | Yes |
-| **Delete key** (forward delete) | Delete selected item | Yes |
-| **Cmd+Backspace** | Delete selected item | Yes |
+| **Cmd+D** | Delete selected item | Yes |
 
 **Behavior:**
 - Only affects currently selected item
-- Requires same confirmation as context menu
-- Works in search mode (filtered list)
+- Requires confirmation dialog (same as context menu)
+- Works regardless of focus (search field or list)
+- **Cmd+D** is the primary shortcut for quick deletion
+- UI hint: Footer shows "⌘D delete" alongside other shortcuts
 
 ---
 
@@ -172,25 +172,31 @@ If blob file deletion fails:
 
 ## Keyboard Navigation Integration
 
-**Existing key handling (PanelCoordinator.swift):**
+**Key handling in PanelCoordinator.swift:**
 ```swift
 case 53: // ESC → close panel
 case 126: // Up arrow
 case 125: // Down arrow
 case 36, 76: // Enter / Return → paste
+case 2: // 'd' key with Cmd modifier → delete
+    if event.modifierFlags.contains(.command) {
+        // Directly call ViewModel method following SwiftUI data flow
+        self.viewModel?.requestDeleteSelected()
+        return nil
+    }
 ```
 
-**Add new cases:**
-```swift
-case 51: // Backspace → delete
-case 117: // Forward delete → delete
-    // Show confirmation, then delete
-```
+**Implementation following SwiftUI data flow:**
+1. **PanelCoordinator** detects Cmd+D and calls `viewModel.requestDeleteSelected()`
+2. **MainPanelViewModel** sets `@Published var deleteRequest: Item?` to the selected item
+3. **ContentView** observes `deleteRequest` via `.onChange` and triggers confirmation dialog
+4. Upon confirmation, ContentView calls `vm.deleteItem()` to perform deletion
 
-**Conflict check:**
-- Backspace in search field: should NOT trigger item delete
-- Only trigger when focus is on list (not search)
-- Implementation: check `focusTarget == .list` before handling delete
+**Advantages of this approach:**
+- No NotificationCenter usage (follows architecture guidelines)
+- Pure SwiftUI data flow: ViewModel state → View observation → UI update
+- Works regardless of focus location (search or list)
+- Easy to test and maintain
 
 ---
 
@@ -230,7 +236,7 @@ Existing vacuum/optimize already handles:
 
 - [ ] Right-click on list item shows "Delete…" option
 - [ ] Preview pane has Delete button
-- [ ] Backspace/Delete key triggers delete for selected item
+- [ ] **Cmd+D triggers delete for selected item**
 - [ ] Confirmation dialog shows for non-pinned items
 - [ ] Extra confirmation shows for pinned items
 - [ ] Image items delete blob file from disk
@@ -238,4 +244,5 @@ Existing vacuum/optimize already handles:
 - [ ] Fade-out animation plays before removal
 - [ ] Selection moves to next item after delete
 - [ ] Errors are shown in preview pane
-- [ ] Backspace in search field does NOT trigger item delete
+- [ ] **Cmd+D works regardless of focus (list or search field)**
+- [ ] **UI footer shows "⌘D delete" hint**

@@ -48,6 +48,9 @@ func ct_items_clear_all(_ core: UnsafeMutableRawPointer?, _ keepPinned: Int32, _
 @_silgen_name("ct_items_remove_history")
 func ct_items_remove_history(_ core: UnsafeMutableRawPointer?, _ keepPinned: Int32) -> Int32
 
+@_silgen_name("ct_items_delete_physical")
+func ct_items_delete_physical(_ core: UnsafeMutableRawPointer?, _ id: UnsafePointer<CChar>?) -> Int32
+
 @_silgen_name("ct_db_optimize")
 func ct_db_optimize(_ core: UnsafeMutableRawPointer?) -> Int32
 

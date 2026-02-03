@@ -3,6 +3,10 @@ import SwiftUI
 struct ItemRowView: View {
     let item: Item
     let selected: Bool
+    let isDeleting: Bool
+    let onDelete: () -> Void
+    let onCopy: () -> Void
+    let onPaste: () -> Void
 
     private var timeText: String {
         let ts = TimeInterval(item.lastCopiedAtMs) / 1000
@@ -117,5 +121,22 @@ struct ItemRowView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.accentColor.opacity(selected ? 0.22 : 0.0), lineWidth: 1)
         )
+        .opacity(isDeleting ? 0 : 1)
+        .animation(.easeOut(duration: 0.2), value: isDeleting)
+        .contextMenu {
+            Button("Copy") {
+                onCopy()
+            }
+            
+            Button("Paste") {
+                onPaste()
+            }
+            
+            Divider()
+            
+            Button("Delete…") {
+                onDelete()
+            }
+        }
     }
 }

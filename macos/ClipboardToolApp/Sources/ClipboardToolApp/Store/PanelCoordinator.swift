@@ -115,6 +115,14 @@ final class PanelCoordinator {
                 case 36, 76: // Enter / Return
                     self.viewModel?.pasteSelectedToPreviousApp()
                     return nil
+                case 2: // 'd' key - check for Cmd+D
+                    if event.modifierFlags.contains(.command) {
+                        // Cmd+D: Delete selected item (works regardless of focus)
+                        // Directly call ViewModel method following SwiftUI data flow
+                        self.viewModel?.requestDeleteSelected()
+                        return nil
+                    }
+                    return event
                 default:
                     return event
                 }

@@ -9,6 +9,7 @@ struct MainPanelBody: View {
     @Binding var lastSelectedID: String?
     @Binding var lastClickID: String?
     @Binding var lastClickAt: Date?
+    let onDelete: () -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -37,13 +38,13 @@ struct MainPanelBody: View {
                         )
                         .frame(width: listW)
 
-                        MainPanelPreviewPane(vm: vm, store: store)
+                        MainPanelPreviewPane(vm: vm, store: store, onDelete: onDelete)
                             .frame(width: previewW)
                     }
 
                 case .previewLeft:
                     HStack(spacing: spacing) {
-                        MainPanelPreviewPane(vm: vm, store: store)
+                        MainPanelPreviewPane(vm: vm, store: store, onDelete: onDelete)
                             .frame(width: previewW)
 
                         MainPanelListPane(
@@ -69,7 +70,7 @@ struct MainPanelBody: View {
                         )
                         .frame(height: listH)
 
-                        MainPanelPreviewPane(vm: vm, store: store)
+                        MainPanelPreviewPane(vm: vm, store: store, onDelete: onDelete)
                             .frame(height: previewH)
                     }
                 }
