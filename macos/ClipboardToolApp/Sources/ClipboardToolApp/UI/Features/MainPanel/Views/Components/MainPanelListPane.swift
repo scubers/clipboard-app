@@ -40,12 +40,19 @@ struct MainPanelListPane: View {
             }
         }
         .focused(focus, equals: .list)
+        // Sync alert presentation state to ViewModel so PanelCoordinator knows to disable shortcuts
+        .onChange(of: showDeleteConfirmation) { _, isPresented in
+            vm.modalState = isPresented ? .deleteAlert : .none
+        }
+        // Note: Button order matters for default keyboard behavior.
+        // First button gets default Enter key action.
+        // Delete button first so Enter confirms delete, Esc triggers Cancel (.cancel role).
         .alert(deleteConfirmationTitle, isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {
-                itemToDelete = nil
-            }
-            Button(itemToDelete?.pinned == true ? "Delete Anyway" : "Delete", role: .destructive) {
+            Button(itemToDelete?.pinned == true ? "Delete Anyway" : "Delete") {
                 performDelete()
+            }
+            Button("Cancel") {
+                itemToDelete = nil
             }
         } message: {
             Text(deleteConfirmationMessage)

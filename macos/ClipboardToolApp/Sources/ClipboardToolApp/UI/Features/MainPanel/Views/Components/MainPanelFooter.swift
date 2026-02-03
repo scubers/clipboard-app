@@ -5,7 +5,7 @@ struct MainPanelFooter: View {
 
     var body: some View {
         HStack {
-            Text("↑↓ select · ⌘↵ paste · ⌘C copy · ⌘D delete")
+            Text("↑↓ select · ↵ paste · ⌘C copy · ⌘D delete")
             Spacer()
             Text("\(count) items")
         }

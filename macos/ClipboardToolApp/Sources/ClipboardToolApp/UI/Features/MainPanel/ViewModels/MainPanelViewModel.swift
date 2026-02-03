@@ -35,6 +35,24 @@ final class MainPanelViewModel: ObservableObject {
     
     // Delete request for keyboard shortcut (Cmd+D) - triggers confirmation dialog in UI
     @Published var deleteRequest: Item?
+    
+    // MARK: - Modal State Management
+    
+    /// Current modal state of MainPanel. When a modal (alert, sheet) is presented,
+    /// keyboard shortcuts should be disabled to let the modal handle its own events.
+    enum ModalState: Equatable {
+        case none           // MainPanel is in normal interactive state
+        case deleteAlert    // Delete confirmation alert is presented
+        // Future: .settings, .importProgress, etc.
+    }
+    
+    @Published var modalState: ModalState = .none
+    
+    /// Returns true when MainPanel is in normal interactive state (no modals presented).
+    /// Keyboard shortcuts (Enter, arrows, Cmd+D) should only work when this is true.
+    var isMainPanelActive: Bool {
+        modalState == .none
+    }
 
     private let store = AppStore.shared
     private var repo: ClipboardRepository { store.clipboardRepo }

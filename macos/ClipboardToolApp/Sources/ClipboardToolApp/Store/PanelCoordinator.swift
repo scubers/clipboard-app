@@ -101,6 +101,13 @@ final class PanelCoordinator {
             // ESC to close; Return to paste (default behavior).
             localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self, weak p] event in
                 guard let self, let p, p.isVisible else { return event }
+                
+                // CRITICAL: When MainPanel is not in active state (e.g., alert is shown),
+                // let the modal handle its own keyboard events.
+                // This ensures Enter confirms alert buttons, not triggering paste.
+                guard self.viewModel?.isMainPanelActive == true else {
+                    return event
+                }
 
                 switch event.keyCode {
                 case 53: // ESC
