@@ -1,10 +1,12 @@
-# Clipboard Tool — V1 Tasks
+# Clipboard Tool — V1 Completed Tasks
 
-## Milestone 0: Repo skeleton
+This file tracks completed milestones and features.
+
+## Milestone 0: Repo skeleton ✅
 - [x] Create repo layout: `macos/` (SwiftUI app), `core/` (Go), `docs/`.
 - [x] Add build scripts for Go → C library.
 
-## Milestone 1: Go core (local persistence)
+## Milestone 1: Go core (local persistence) ✅
 - [x] Define data model (ClipboardItem).
 - [x] Implement SQLite schema + migrations.
 - [x] Implement insert item (text only first).
@@ -19,7 +21,7 @@
 - [x] Implement DB maintenance APIs (vacuum/optimize).
 - [x] Implement stats API.
 
-## Milestone 2: SwiftUI macOS app
+## Milestone 2: SwiftUI macOS app ✅
 - [x] Menu bar app scaffold (SwiftPM buildable).
 - [x] Settings screen (data dir, retention, poll interval, privacy toggle).
 - [x] User-configurable global hotkey (no default).
@@ -31,14 +33,22 @@
 - [x] Auto-focus search field on open.
 - [x] Keyboard: Down arrow from search focuses list + selects first item.
 
-## Milestone 3: Packaging & DX
+## Milestone 3: Packaging & DX ✅
 - [x] Launch at login toggle.
-- [ ] Minimal logging.
 - [x] DB integrity check helper.
 - [x] Export/import by moving the single data directory (core API + Settings UI).
+- [x] Build runnable `.app` bundle for local testing (scripted).
+- [x] Convert SwiftPM project into a proper Xcode `.app` project (XcodeGen).
 
-## Acceptance criteria (V1)
-- Captures text clipboard reliably.
-- Search works on last 500 items.
-- All persistent data lives under one directory.
-- Privacy mode stops capturing.
+## Acceptance Criteria (V1) ✅
+- [x] Captures text clipboard reliably.
+- [x] Search works on last 500 items.
+- [x] All persistent data lives under one directory.
+- [x] Privacy mode stops capturing.
+
+## V1.1 Enhancements ✅
+- [x] Add image clipboard support (PNG, TIFF, JPEG, WebP)
+- [x] Implement clipboard handler architecture with type-based routing
+- [x] Improve hotkey UX: record arbitrary key combo (instead of presets)
+- [x] Better preview UI for long text (wrap toggle, monospace toggle)
+- [x] Switch main window to floating NSPanel that hides on deactivate

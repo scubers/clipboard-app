@@ -39,7 +39,7 @@ Pasty 是一个 **macOS 菜单栏剪贴板历史工具**：自动捕获剪贴板
   - `macos/Xcode/`：Xcode 工程（由 XcodeGen 生成，便于打包/分发）
 - `scripts/`：构建与发布脚本
 
-更详细的分层与依赖规则见：`macos/ARCHITECTURE.md`。
+更详细的分层与依赖规则见：`docs/architecture/macos.md`。
 
 ---
 
@@ -138,11 +138,12 @@ git push origin v0.2.1
 
 ## 相关文档
 
-- `SPEC.md`：产品与功能规格（V1）
-- `SPEC_CORE_ABI.md`：Go Core C ABI 约定
-- `macos/ARCHITECTURE.md`：macOS 端目录结构与依赖规则
-- `README_DEV.md`：开发注意事项与行为约束
-- `CHANGELOG.md`：版本变更
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)：开发指南与构建流程
+- [docs/spec/](docs/spec/)：产品与功能规格（V1）
+- [docs/design/](docs/design/)：UI/UX 与功能设计规格
+- [docs/architecture/](docs/architecture/)：技术架构文档
+- [docs/planning/](docs/planning/)：任务清单与待办事项
+- [CHANGELOG.md](CHANGELOG.md)：版本变更
 
 ---
 

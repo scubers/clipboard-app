@@ -154,7 +154,7 @@ let imageHandler = ImageHandler(core: core) { [weak self] data, mime, sourceApp 
 monitor.handlerRegistry.register(imageHandler)
 ```
 
-See `DESIGN_CLIPBOARD_HANDLER.md` for detailed design and implementation guide.
+See [clipboard-handler.md](clipboard-handler.md) for detailed design and implementation guide.
 
 ### How features communicate
 Feature-to-feature interaction must happen via one of:
@@ -242,5 +242,5 @@ Rules:
    - Create new handler in `Services/ClipboardCapture/Handlers/`
    - Implement `ClipboardHandler` protocol
    - Register in `AppStore.startMonitoring()`
-   - See `DESIGN_CLIPBOARD_HANDLER.md` for detailed guide
+    - See `clipboard-handler.md` for detailed guide
 5. Ensure build still works with SwiftPM, Xcode project (XcodeGen), and CI release workflow.

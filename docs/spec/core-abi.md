@@ -113,30 +113,37 @@ File: `${dataDir}/data/clipboard.sqlite`
 ### 6.2 Tables
 
 #### 6.2.1 `items`
-Text-only items.
+Supports text and image items.
 
 ```sql
 CREATE TABLE IF NOT EXISTS items (
   id TEXT PRIMARY KEY,
   created_at_ms INTEGER NOT NULL,
-  type TEXT NOT NULL, -- 'text'
+  type TEXT NOT NULL, -- 'text' | 'image' | 'file' | 'html' | 'rtf' | 'unknown'
   summary TEXT NOT NULL,
-  text_content TEXT NOT NULL,
+  text_content TEXT,      -- only for text items
+  content_ref TEXT,       -- blob file path for non-text items
   content_hash TEXT NOT NULL,
   source_app TEXT,
   pinned INTEGER NOT NULL DEFAULT 0,
-  deleted_at_ms INTEGER
+  deleted_at_ms INTEGER,
+  last_copied_at_ms INTEGER,
+  ocr_text TEXT,          -- OCR text for images (truncated to 16k)
+  ocr_status INTEGER,      -- 0=unknown/pending, 1=done, 2=failed
+  ocr_updated_at_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at_ms DESC);
 CREATE INDEX IF NOT EXISTS idx_items_deleted ON items(deleted_at_ms);
-CREATE INDEX IF NOT EXISTS idx_items_pinned ON items(pinned DESC, created_at_ms DESC);
+CREATE INDEX IF NOT EXISTS idx_items_pinned ON items(pinned DESC, last_copied_at_ms DESC, created_at_ms DESC);
 CREATE INDEX IF NOT EXISTS idx_items_hash ON items(content_hash);
 ```
 
 Notes:
-- `summary` is the first N chars of `text_content` with whitespace normalized.
-- `content_hash` is SHA-256 of canonical text bytes (UTF-8).
+- `summary` is the first N chars of text or filename for images.
+- `content_hash` is SHA-256 of canonical bytes (UTF-8 for text, binary for images).
+- Default ordering: `pinned DESC, last_copied_at_ms DESC, created_at_ms DESC`
+- OCR columns store Vision framework results for image search.
 
 #### 6.2.2 FTS (optional V1)
 We can use SQLite FTS5 for better search.
@@ -238,6 +245,40 @@ Core behavior:
   - If last item has same hash and created_at within 3 seconds → no-op (out_id NULL)
 - Enforce retention after insert.
 
+### 7.5 Insert clipboard image
+Swift side will call this after detecting image pasteboard change.
+
+```c
+// returns CT_OK and sets out_id to newly created item id (malloc'd); caller frees via ct_free
+int32_t ct_items_add_image(ct_core* core,
+                           const char* mime_type,      // e.g., "image/png", "image/tiff", "image/jpeg"
+                           const uint8_t* data,        // image binary data
+                           size_t data_len,               // data length in bytes
+                           const char* source_app,
+                           int64_t created_at_ms,
+                           char** out_id);
+```
+
+Core behavior:
+- If privacy mode enabled → return CT_OK but `out_id = NULL` (no-op).
+- Compute content_hash (sha256 of binary data)
+- Store blob file under `${dataDir}/data/blobs/{content_hash}` with appropriate extension
+- Compute summary (truncated filename or "Image" if no source app)
+- Dedupe:
+  - If last item has same hash and created_at within 3 seconds → no-op (out_id NULL)
+- Enforce retention after insert.
+
+Core behavior:
+- If privacy mode enabled → return CT_OK but `out_id = NULL` (no-op).
+- Canonicalize text:
+  - normalize line endings to `\n`
+  - trim trailing whitespace
+- Compute summary (first 120 chars)
+- Compute content_hash (sha256)
+- Dedupe:
+  - If last item has same hash and created_at within 3 seconds → no-op (out_id NULL)
+- Enforce retention after insert.
+
 ### 7.5 List
 We want pagination.
 
@@ -255,14 +296,17 @@ JSON element shape:
 {
   "id":"...",
   "createdAtMs": 0,
-  "type":"text",
+  "type":"text" | "image" | "file" | "html" | "rtf" | "unknown",
   "summary":"...",
   "sourceApp": null,
-  "pinned": false
+  "pinned": false,
+  "contentRef": "...",  // blob file path for non-text items
+  "ocrStatus": 0,      // for images: 0=unknown/pending, 1=done, 2=failed
+  "ocrUpdatedAtMs": 0
 }
 ```
 
-### 7.6 Search
+### 7.7 Search
 ```c
 int32_t ct_items_search_json(ct_core* core,
                              const char* query_utf8,
@@ -298,6 +342,39 @@ int32_t ct_items_get_text(ct_core* core,
                           char** out_text_utf8);
 ```
 
+### 7.8 Get blob file path
+For non-text items (images), Swift needs the blob file path for preview.
+
+```c
+int32_t ct_items_get_blob_path(ct_core* core,
+                              const char* id,
+                              char** out_path_utf8);
+```
+
+Returns:
+- Absolute file path to the blob under `${dataDir}/data/blobs/`
+- Caller must free via `ct_free()`
+- Returns `CT_ERR_UNSUPPORTED` if item type is not image/file
+
+### 7.9 OCR text management
+For image items, OCR text is stored separately for search.
+
+```c
+// Set OCR text for an image item
+int32_t ct_items_set_ocr_text(ct_core* core,
+                              const char* id,
+                              const char* ocr_text_utf8,  // truncated to 16k chars
+                              int32_t ocr_status,            // 1=done, 2=failed
+                              int64_t updated_at_ms);
+```
+
+Behavior:
+- Updates `ocr_text`, `ocr_status`, `ocr_updated_at_ms` columns
+- For status=2 (failed), stores empty text
+- Returns `CT_ERR_NOT_FOUND` if id does not exist
+
+### 7.10 Pin/unpin
+
 ### 7.8 Pin/unpin
 ```c
 int32_t ct_items_set_pinned(ct_core* core,
@@ -320,7 +397,7 @@ Behavior:
 - If `deleted_at_ms <= 0`, core uses current time.
 - Returns `CT_ERR_NOT_FOUND` if id does not exist or is already deleted.
 
-### 7.10 Clear all
+### 7.11 Clear all
 Bulk soft-delete.
 ```c
 // keep_pinned: 0 => delete everything, 1 => keep pinned items
@@ -333,7 +410,7 @@ Behavior:
 - If `deleted_at_ms <= 0`, core uses current time.
 - Only affects rows with `deleted_at_ms IS NULL`.
 
-### 7.11 DB maintenance
+### 7.12 DB maintenance
 ```c
 int32_t ct_db_vacuum(ct_core* core);
 int32_t ct_db_optimize(ct_core* core);
@@ -347,7 +424,7 @@ Notes:
 - `ct_db_vacuum` can be slow; call it manually (e.g., after large deletions), not on every launch.
 - `ct_db_optimize` runs `PRAGMA optimize`.
 
-### 7.12 Stats
+### 7.13 Stats
 ```c
 int32_t ct_items_stats_json(ct_core* core,
                             char** out_json);
@@ -363,7 +440,7 @@ Returns JSON:
 }
 ```
 
-### 7.13 Export / Import (directory-based)
+### 7.14 Export / Import (directory-based)
 ```c
 // Export current dataset (settings + sqlite) to dest_dir.
 int32_t ct_export_to_dir(ct_core* core,
@@ -382,19 +459,24 @@ Directory layout expected:
 
 ---
 
-## 8. Swift responsibilities
+## 9. Swift responsibilities
 
 - Determine `dataDir` (default + allow user change later).
-- Poll NSPasteboard and extract string.
+- Poll NSPasteboard and extract content.
 - Determine `sourceApp` (optional; can be null in V1).
-- Call `ct_items_add_text`.
+- Call appropriate add function:
+  - `ct_items_add_text` for text content
+  - `ct_items_add_image` for image content
 - Render list/search via JSON returned from core.
-- On selection, call `ct_items_get_text` for preview.
+- On selection:
+  - For text items, call `ct_items_get_text` for preview
+  - For image items, call `ct_items_get_blob_path` for preview
 - Copy selected item back to clipboard (Swift writes to NSPasteboard).
+- For images, optionally run OCR and call `ct_items_set_ocr_text` with results.
 
 ---
 
-## 9. Acceptance tests (core)
+## 10. Acceptance tests (core)
 
 - Opening core creates directory structure.
 - Insert text creates item.
